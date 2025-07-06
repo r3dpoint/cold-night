@@ -11,7 +11,7 @@ npm install -g @anthropic-ai/claude-code
 
 # nvm alias default lts/iron
 # npm install
-# go install github.com/cosmtrek/air@latest
+# go install github.com/air-verse/air@latest
 
 # git config --global branch.autosetupmerge always
 # git config --global branch.autosetuprebase always

@@ -259,7 +259,7 @@ RUN dnf update -y && dnf install -y \
     && dnf clean all
 
 # Install Air for live reloading
-RUN go install github.com/cosmtrek/air@latest
+RUN go install github.com/air-verse/air@latest
 
 # Install migrate tool
 RUN go install -tags 'postgres' github.com/golang-migrate/migrate/v4/cmd/migrate@latest
@@ -771,7 +771,7 @@ domains/compliance/templates/risk-dashboard.html
 # Setup development environment
 setup:
  go mod download
- go install github.com/cosmtrek/air@latest
+ go install github.com/air-verse/air@latest
  go install gotest.tools/gotestsum@latest
  make migrate-up
 

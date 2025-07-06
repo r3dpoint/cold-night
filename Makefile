@@ -4,7 +4,7 @@
 # Setup development environment
 setup:
 	go mod download
-	go install github.com/cosmtrek/air@latest
+	go install github.com/air-verse/air@latest
 	go install gotest.tools/gotestsum@latest
 	make migrate-up
 
@@ -23,10 +23,10 @@ test-integration:
 
 # Database migrations
 migrate-up:
-	migrate -path migrations -database "postgres://user:pass@localhost:5432/securities?sslmode=disable" up
+	migrate -verbose -path migrations/ -database "postgres://postgres:postgres@localhost:5432/postgres?sslmode=disable" up
 
 migrate-down:
-	migrate -path migrations -database "postgres://user:pass@localhost:5432/securities?sslmode=disable" down
+	migrate -verbose -path migrations/ -database "postgres://postgres:postgres@localhost:5432/postgres?sslmode=disable" down
 
 # Development server with live reload
 dev:
