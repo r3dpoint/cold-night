@@ -1,0 +1,228 @@
+{{template "base.html" .}}
+
+{{define "content"}}
+<div class="container">
+    <!-- Hero Section -->
+    <div class="row mb-5">
+        <div class="col-lg-8 mx-auto text-center">
+            <h1 class="display-4 fw-bold text-primary mb-4">
+                <i class="fas fa-chart-line me-3"></i>
+                Securities Trading Platform
+            </h1>
+            <p class="lead mb-4">
+                A secure, compliant marketplace for trading private securities with institutional-grade 
+                infrastructure, comprehensive compliance monitoring, and real-time settlement processing.
+            </p>
+            {{if not .IsLoggedIn}}
+            <div class="d-grid gap-2 d-md-flex justify-content-md-center">
+                <a href="/register" class="btn btn-primary btn-lg me-md-2">
+                    <i class="fas fa-user-plus me-2"></i>Get Started
+                </a>
+                <a href="/login" class="btn btn-outline-primary btn-lg">
+                    <i class="fas fa-sign-in-alt me-2"></i>Login
+                </a>
+            </div>
+            {{else}}
+            <div class="d-grid gap-2 d-md-flex justify-content-md-center">
+                <a href="/app/dashboard" class="btn btn-primary btn-lg me-md-2">
+                    <i class="fas fa-tachometer-alt me-2"></i>Go to Dashboard
+                </a>
+                <a href="/app/trading" class="btn btn-outline-primary btn-lg">
+                    <i class="fas fa-exchange-alt me-2"></i>Start Trading
+                </a>
+            </div>
+            {{end}}
+        </div>
+    </div>
+
+    <!-- Features Section -->
+    <div class="row mb-5">
+        <div class="col-12">
+            <h2 class="text-center mb-5">Platform Features</h2>
+        </div>
+        
+        <div class="col-md-4 mb-4">
+            <div class="card h-100 border-0 shadow-sm">
+                <div class="card-body text-center">
+                    <div class="bg-primary text-white rounded-circle d-inline-flex align-items-center justify-content-center mb-3" 
+                         style="width: 60px; height: 60px;">
+                        <i class="fas fa-shield-alt fa-lg"></i>
+                    </div>
+                    <h5 class="card-title">Regulatory Compliance</h5>
+                    <p class="card-text">
+                        Built-in compliance monitoring, accreditation verification, and regulatory 
+                        reporting to ensure all trades meet legal requirements.
+                    </p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4 mb-4">
+            <div class="card h-100 border-0 shadow-sm">
+                <div class="card-body text-center">
+                    <div class="bg-success text-white rounded-circle d-inline-flex align-items-center justify-content-center mb-3" 
+                         style="width: 60px; height: 60px;">
+                        <i class="fas fa-cogs fa-lg"></i>
+                    </div>
+                    <h5 class="card-title">Advanced Matching</h5>
+                    <p class="card-text">
+                        Sophisticated order matching engine with price-time priority, uniform price 
+                        auctions, and support for complex trading strategies.
+                    </p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4 mb-4">
+            <div class="card h-100 border-0 shadow-sm">
+                <div class="card-body text-center">
+                    <div class="bg-info text-white rounded-circle d-inline-flex align-items-center justify-content-center mb-3" 
+                         style="width: 60px; height: 60px;">
+                        <i class="fas fa-clock fa-lg"></i>
+                    </div>
+                    <h5 class="card-title">Real-time Settlement</h5>
+                    <p class="card-text">
+                        T+2 settlement with automated escrow management, payment processing, 
+                        and share transfer coordination for seamless transactions.
+                    </p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4 mb-4">
+            <div class="card h-100 border-0 shadow-sm">
+                <div class="card-body text-center">
+                    <div class="bg-warning text-white rounded-circle d-inline-flex align-items-center justify-content-center mb-3" 
+                         style="width: 60px; height: 60px;">
+                        <i class="fas fa-chart-bar fa-lg"></i>
+                    </div>
+                    <h5 class="card-title">Market Analytics</h5>
+                    <p class="card-text">
+                        Comprehensive market data, real-time pricing, portfolio analytics, 
+                        and performance tracking with institutional-grade reporting.
+                    </p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4 mb-4">
+            <div class="card h-100 border-0 shadow-sm">
+                <div class="card-body text-center">
+                    <div class="bg-danger text-white rounded-circle d-inline-flex align-items-center justify-content-center mb-3" 
+                         style="width: 60px; height: 60px;">
+                        <i class="fas fa-lock fa-lg"></i>
+                    </div>
+                    <h5 class="card-title">Enterprise Security</h5>
+                    <p class="card-text">
+                        Bank-grade security with encryption, audit trails, role-based access 
+                        control, and comprehensive fraud detection systems.
+                    </p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4 mb-4">
+            <div class="card h-100 border-0 shadow-sm">
+                <div class="card-body text-center">
+                    <div class="bg-secondary text-white rounded-circle d-inline-flex align-items-center justify-content-center mb-3" 
+                         style="width: 60px; height: 60px;">
+                        <i class="fas fa-users fa-lg"></i>
+                    </div>
+                    <h5 class="card-title">Multi-Role Support</h5>
+                    <p class="card-text">
+                        Dedicated interfaces for clients, brokers, compliance officers, and 
+                        administrators with role-specific features and permissions.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Technology Section -->
+    <div class="row mb-5">
+        <div class="col-12">
+            <div class="bg-light rounded p-5">
+                <h2 class="text-center mb-4">Built with Modern Technology</h2>
+                <div class="row text-center">
+                    <div class="col-md-3 mb-3">
+                        <h5><i class="fab fa-golang me-2 text-primary"></i>Go Backend</h5>
+                        <p class="small">High-performance, concurrent processing</p>
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <h5><i class="fas fa-database me-2 text-primary"></i>PostgreSQL</h5>
+                        <p class="small">Event sourcing with ACID compliance</p>
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <h5><i class="fas fa-bolt me-2 text-primary"></i>Redis</h5>
+                        <p class="small">Real-time event processing</p>
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <h5><i class="fas fa-mobile-alt me-2 text-primary"></i>Responsive</h5>
+                        <p class="small">Mobile-first design</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Market Status (if logged in) -->
+    {{if .IsLoggedIn}}
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-chart-area me-2"></i>Market Status
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row text-center">
+                        <div class="col-md-3">
+                            <h4 class="text-primary">45</h4>
+                            <p class="mb-0">Listed Securities</p>
+                        </div>
+                        <div class="col-md-3">
+                            <h4 class="text-success">23</h4>
+                            <p class="mb-0">Active Listings</p>
+                        </div>
+                        <div class="col-md-3">
+                            <h4 class="text-info">89</h4>
+                            <p class="mb-0">Today's Trades</p>
+                        </div>
+                        <div class="col-md-3">
+                            <h4 class="text-warning">$1.5M</h4>
+                            <p class="mb-0">Daily Volume</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {{end}}
+</div>
+{{end}}
+
+{{define "scripts"}}
+<script>
+// Add any home page specific JavaScript here
+document.addEventListener('DOMContentLoaded', function() {
+    // Animate feature cards on scroll
+    const cards = document.querySelectorAll('.card');
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                entry.target.style.transform = 'translateY(0)';
+                entry.target.style.opacity = '1';
+            }
+        });
+    });
+    
+    cards.forEach(card => {
+        card.style.transform = 'translateY(20px)';
+        card.style.opacity = '0';
+        card.style.transition = 'transform 0.5s ease, opacity 0.5s ease';
+        observer.observe(card);
+    });
+});
+</script>
+{{end}}
