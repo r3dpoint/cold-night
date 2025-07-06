@@ -1,0 +1,396 @@
+{{template "base.html" .}}
+
+{{define "content"}}
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-8 col-lg-6">
+            <div class="card shadow">
+                <div class="card-header bg-success text-white text-center">
+                    <h4 class="mb-0">
+                        <i class="fas fa-user-plus me-2"></i>
+                        Create Your Account
+                    </h4>
+                </div>
+                <div class="card-body p-4">
+                    <form method="POST" action="/register" class="needs-validation" novalidate>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="email" class="form-label">
+                                    <i class="fas fa-envelope me-1"></i>Email Address *
+                                </label>
+                                <input 
+                                    type="email" 
+                                    class="form-control" 
+                                    id="email" 
+                                    name="email" 
+                                    required 
+                                    autofocus
+                                    placeholder="your.email@company.com"
+                                >
+                                <div class="invalid-feedback">
+                                    Please provide a valid email address.
+                                </div>
+                            </div>
+                            
+                            <div class="col-md-6 mb-3">
+                                <label for="username" class="form-label">
+                                    <i class="fas fa-user me-1"></i>Username *
+                                </label>
+                                <input 
+                                    type="text" 
+                                    class="form-control" 
+                                    id="username" 
+                                    name="username" 
+                                    required
+                                    pattern="[a-zA-Z0-9_-]{3,20}"
+                                    placeholder="username"
+                                >
+                                <div class="invalid-feedback">
+                                    Username must be 3-20 characters (letters, numbers, - _).
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="full_name" class="form-label">
+                                <i class="fas fa-id-card me-1"></i>Full Name *
+                            </label>
+                            <input 
+                                type="text" 
+                                class="form-control" 
+                                id="full_name" 
+                                name="full_name" 
+                                required
+                                placeholder="John Doe"
+                            >
+                            <div class="invalid-feedback">
+                                Please provide your full name.
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="password" class="form-label">
+                                    <i class="fas fa-lock me-1"></i>Password *
+                                </label>
+                                <div class="input-group">
+                                    <input 
+                                        type="password" 
+                                        class="form-control" 
+                                        id="password" 
+                                        name="password" 
+                                        required
+                                        minlength="8"
+                                        placeholder="Strong password"
+                                    >
+                                    <button 
+                                        type="button" 
+                                        class="btn btn-outline-secondary" 
+                                        onclick="togglePasswordVisibility('password')"
+                                    >
+                                        <i class="fas fa-eye" id="passwordToggleIcon"></i>
+                                    </button>
+                                </div>
+                                <div class="invalid-feedback">
+                                    Password must be at least 8 characters.
+                                </div>
+                            </div>
+                            
+                            <div class="col-md-6 mb-3">
+                                <label for="confirm_password" class="form-label">
+                                    <i class="fas fa-lock me-1"></i>Confirm Password *
+                                </label>
+                                <div class="input-group">
+                                    <input 
+                                        type="password" 
+                                        class="form-control" 
+                                        id="confirm_password" 
+                                        name="confirm_password" 
+                                        required
+                                        placeholder="Confirm password"
+                                    >
+                                    <button 
+                                        type="button" 
+                                        class="btn btn-outline-secondary" 
+                                        onclick="togglePasswordVisibility('confirm_password')"
+                                    >
+                                        <i class="fas fa-eye" id="confirmPasswordToggleIcon"></i>
+                                    </button>
+                                </div>
+                                <div class="invalid-feedback">
+                                    Passwords must match.
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <div class="form-check">
+                                <input type="checkbox" class="form-check-input" id="terms" name="terms" required>
+                                <label class="form-check-label" for="terms">
+                                    I agree to the <a href="/terms" target="_blank">Terms of Service</a> 
+                                    and <a href="/privacy" target="_blank">Privacy Policy</a> *
+                                </label>
+                                <div class="invalid-feedback">
+                                    You must agree to the terms and privacy policy.
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <div class="form-check">
+                                <input type="checkbox" class="form-check-input" id="accredited" name="accredited">
+                                <label class="form-check-label" for="accredited">
+                                    I am an <strong>accredited investor</strong>
+                                    <i class="fas fa-info-circle ms-1" data-bs-toggle="tooltip" 
+                                       title="Accredited investors have higher investment limits and access to exclusive securities"></i>
+                                </label>
+                            </div>
+                        </div>
+                        
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-success btn-lg">
+                                <i class="fas fa-user-plus me-2"></i>
+                                Create Account
+                            </button>
+                        </div>
+                    </form>
+                </div>
+                <div class="card-footer text-center bg-light">
+                    <p class="mb-0">
+                        Already have an account? 
+                        <a href="/login" class="fw-bold text-decoration-none">
+                            <i class="fas fa-sign-in-alt me-1"></i>
+                            Login here
+                        </a>
+                    </p>
+                </div>
+            </div>
+            
+            <!-- Account Types Info -->
+            <div class="card mt-4">
+                <div class="card-header">
+                    <h6 class="mb-0">
+                        <i class="fas fa-users me-1"></i>
+                        Account Types & Access Levels
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <div class="d-flex align-items-start">
+                                <div class="badge bg-success me-3 mt-1">
+                                    <i class="fas fa-user"></i>
+                                </div>
+                                <div>
+                                    <h6 class="mb-1">Standard Investor</h6>
+                                    <p class="mb-0 small text-muted">
+                                        Basic trading access with investment limits and standard securities.
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <div class="d-flex align-items-start">
+                                <div class="badge bg-warning me-3 mt-1">
+                                    <i class="fas fa-star"></i>
+                                </div>
+                                <div>
+                                    <h6 class="mb-1">Accredited Investor</h6>
+                                    <p class="mb-0 small text-muted">
+                                        Enhanced access to private securities and higher investment limits.
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <div class="d-flex align-items-start">
+                                <div class="badge bg-info me-3 mt-1">
+                                    <i class="fas fa-handshake"></i>
+                                </div>
+                                <div>
+                                    <h6 class="mb-1">Broker</h6>
+                                    <p class="mb-0 small text-muted">
+                                        Market making capabilities and advanced trading tools.
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <div class="d-flex align-items-start">
+                                <div class="badge bg-secondary me-3 mt-1">
+                                    <i class="fas fa-shield-alt"></i>
+                                </div>
+                                <div>
+                                    <h6 class="mb-1">Compliance</h6>
+                                    <p class="mb-0 small text-muted">
+                                        Risk monitoring and regulatory oversight capabilities.
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{{end}}
+
+{{define "scripts"}}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.querySelector('form');
+    const passwordInput = document.getElementById('password');
+    const confirmPasswordInput = document.getElementById('confirm_password');
+    const usernameInput = document.getElementById('username');
+    const emailInput = document.getElementById('email');
+    
+    // Password strength validation
+    passwordInput.addEventListener('input', function() {
+        validatePasswordStrength(this);
+        validatePasswordMatch();
+    });
+    
+    confirmPasswordInput.addEventListener('input', validatePasswordMatch);
+    
+    // Username availability check (debounced)
+    const checkUsernameAvailability = TradingPlatform.debounce(function(username) {
+        if (username.length >= 3) {
+            // Simulate API call - replace with actual endpoint
+            console.log('Checking username availability:', username);
+        }
+    }, 500);
+    
+    usernameInput.addEventListener('input', function() {
+        const username = this.value;
+        if (username.length >= 3) {
+            checkUsernameAvailability(username);
+        }
+    });
+    
+    // Email domain validation
+    emailInput.addEventListener('input', function() {
+        const email = this.value;
+        if (email && email.includes('@')) {
+            const domain = email.split('@')[1];
+            // Add custom validation for business domains if needed
+            if (domain && (domain.includes('gmail.com') || domain.includes('yahoo.com'))) {
+                this.setCustomValidity('Business email address recommended for trading account');
+            } else {
+                this.setCustomValidity('');
+            }
+        }
+    });
+    
+    // Form submission
+    form.addEventListener('submit', function(event) {
+        if (!form.checkValidity() || !validatePasswordMatch()) {
+            event.preventDefault();
+            event.stopPropagation();
+        }
+        form.classList.add('was-validated');
+    });
+});
+
+function validatePasswordStrength(passwordInput) {
+    const password = passwordInput.value;
+    let strength = 0;
+    let feedback = [];
+    
+    // Length check
+    if (password.length >= 8) strength++;
+    else feedback.push('At least 8 characters');
+    
+    // Character type checks
+    if (/[A-Z]/.test(password)) strength++;
+    else feedback.push('One uppercase letter');
+    
+    if (/[a-z]/.test(password)) strength++;
+    else feedback.push('One lowercase letter');
+    
+    if (/[0-9]/.test(password)) strength++;
+    else feedback.push('One number');
+    
+    if (/[^A-Za-z0-9]/.test(password)) strength++;
+    else feedback.push('One special character');
+    
+    // Remove existing feedback
+    const existingFeedback = passwordInput.parentNode.parentNode.querySelector('.password-strength');
+    if (existingFeedback) {
+        existingFeedback.remove();
+    }
+    
+    if (password.length > 0) {
+        const strengthDiv = document.createElement('div');
+        strengthDiv.className = 'password-strength mt-1';
+        
+        let strengthText = '';
+        let strengthClass = '';
+        let progressWidth = (strength / 5) * 100;
+        
+        if (strength <= 2) {
+            strengthText = 'Weak';
+            strengthClass = 'text-danger';
+        } else if (strength <= 3) {
+            strengthText = 'Medium';
+            strengthClass = 'text-warning';
+        } else {
+            strengthText = 'Strong';
+            strengthClass = 'text-success';
+        }
+        
+        strengthDiv.innerHTML = `
+            <div class="d-flex justify-content-between align-items-center">
+                <small class="${strengthClass}">Password strength: ${strengthText}</small>
+                <small class="text-muted">${strength}/5</small>
+            </div>
+            <div class="progress mt-1" style="height: 4px;">
+                <div class="progress-bar ${strengthClass.replace('text-', 'bg-')}" 
+                     style="width: ${progressWidth}%"></div>
+            </div>
+            ${feedback.length > 0 ? `<small class="text-muted">Missing: ${feedback.join(', ')}</small>` : ''}
+        `;
+        
+        passwordInput.parentNode.parentNode.appendChild(strengthDiv);
+    }
+    
+    return strength >= 3;
+}
+
+function validatePasswordMatch() {
+    const password = document.getElementById('password').value;
+    const confirmPassword = document.getElementById('confirm_password').value;
+    const confirmInput = document.getElementById('confirm_password');
+    
+    if (confirmPassword && password !== confirmPassword) {
+        confirmInput.setCustomValidity('Passwords do not match');
+        return false;
+    } else {
+        confirmInput.setCustomValidity('');
+        return true;
+    }
+}
+
+function togglePasswordVisibility(inputId) {
+    const input = document.getElementById(inputId);
+    const icon = document.getElementById(inputId + 'ToggleIcon') || 
+                 document.getElementById(inputId.replace('_', '') + 'ToggleIcon');
+    
+    if (input.type === 'password') {
+        input.type = 'text';
+        if (icon) icon.className = 'fas fa-eye-slash';
+    } else {
+        input.type = 'password';
+        if (icon) icon.className = 'fas fa-eye';
+    }
+}
+
+// Initialize tooltips
+document.addEventListener('DOMContentLoaded', function() {
+    const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+    tooltipTriggerList.map(function(tooltipTriggerEl) {
+        return new bootstrap.Tooltip(tooltipTriggerEl);
+    });
+});
+</script>
+{{end}}

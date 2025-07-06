@@ -1,0 +1,523 @@
+{{template "base.html" .}}
+
+{{define "content"}}
+<div class="container-fluid">
+    <!-- Compliance Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h1 class="h3 mb-1">
+                        <i class="fas fa-clipboard-check me-2 text-warning"></i>
+                        Compliance Dashboard
+                    </h1>
+                    <p class="text-muted mb-0">
+                        Regulatory monitoring and risk management center
+                    </p>
+                </div>
+                <div>
+                    <div class="btn-group" role="group">
+                        <button class="btn btn-outline-primary btn-sm" onclick="generateComplianceReport()">
+                            <i class="fas fa-file-download me-1"></i>Export Report
+                        </button>
+                        <button class="btn btn-outline-warning btn-sm" onclick="runComplianceCheck()">
+                            <i class="fas fa-search me-1"></i>Run Check
+                        </button>
+                        <button class="btn btn-outline-danger btn-sm" onclick="showRiskAlerts()">
+                            <i class="fas fa-exclamation-triangle me-1"></i>Risk Alerts
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Compliance Metrics -->
+    <div class="row mb-4">
+        <div class="col-lg-3 col-md-6 mb-3">
+            <div class="card bg-success text-white h-100">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-grow-1">
+                            <h6 class="card-title mb-1">Compliant Users</h6>
+                            <h4 class="mb-0">1,156</h4>
+                            <small class="opacity-75">92.7% of total</small>
+                        </div>
+                        <div class="ms-3">
+                            <i class="fas fa-user-check fa-2x opacity-75"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-lg-3 col-md-6 mb-3">
+            <div class="card bg-warning text-white h-100">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-grow-1">
+                            <h6 class="card-title mb-1">Pending Reviews</h6>
+                            <h4 class="mb-0">23</h4>
+                            <small class="opacity-75">Awaiting verification</small>
+                        </div>
+                        <div class="ms-3">
+                            <i class="fas fa-clock fa-2x opacity-75"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-lg-3 col-md-6 mb-3">
+            <div class="card bg-danger text-white h-100">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-grow-1">
+                            <h6 class="card-title mb-1">Risk Flags</h6>
+                            <h4 class="mb-0">7</h4>
+                            <small class="opacity-75">High priority</small>
+                        </div>
+                        <div class="ms-3">
+                            <i class="fas fa-flag fa-2x opacity-75"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-lg-3 col-md-6 mb-3">
+            <div class="card bg-info text-white h-100">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-grow-1">
+                            <h6 class="card-title mb-1">Today's Checks</h6>
+                            <h4 class="mb-0">342</h4>
+                            <small class="opacity-75">Automated scans</small>
+                        </div>
+                        <div class="ms-3">
+                            <i class="fas fa-shield-alt fa-2x opacity-75"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Risk Alerts -->
+        <div class="col-lg-6 mb-4">
+            <div class="card h-100">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">
+                        <i class="fas fa-exclamation-triangle me-2 text-danger"></i>High Risk Alerts
+                    </h5>
+                    <span class="badge bg-danger">7 Active</span>
+                </div>
+                <div class="card-body p-0">
+                    <div class="list-group list-group-flush">
+                        <div class="list-group-item d-flex justify-content-between align-items-start">
+                            <div class="me-auto">
+                                <div class="fw-bold text-danger">Large Transaction Alert</div>
+                                <p class="mb-1">$2.5M trade exceeds normal pattern for user ID: USR_1247</p>
+                                <small class="text-muted">Triggered: 2 hours ago</small>
+                            </div>
+                            <div class="btn-group-vertical btn-group-sm">
+                                <button class="btn btn-outline-primary" onclick="reviewAlert('TXN_001')">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                                <button class="btn btn-outline-success" onclick="approveAlert('TXN_001')">
+                                    <i class="fas fa-check"></i>
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <div class="list-group-item d-flex justify-content-between align-items-start">
+                            <div class="me-auto">
+                                <div class="fw-bold text-warning">Accreditation Expiry</div>
+                                <p class="mb-1">User john.smith@corp.com accreditation expires in 15 days</p>
+                                <small class="text-muted">Triggered: 5 hours ago</small>
+                            </div>
+                            <div class="btn-group-vertical btn-group-sm">
+                                <button class="btn btn-outline-primary" onclick="reviewAlert('ACC_001')">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                                <button class="btn btn-outline-warning" onclick="notifyUser('ACC_001')">
+                                    <i class="fas fa-bell"></i>
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <div class="list-group-item d-flex justify-content-between align-items-start">
+                            <div class="me-auto">
+                                <div class="fw-bold text-danger">Velocity Check Failed</div>
+                                <p class="mb-1">Multiple rapid trades detected from IP: 192.168.1.100</p>
+                                <small class="text-muted">Triggered: 1 day ago</small>
+                            </div>
+                            <div class="btn-group-vertical btn-group-sm">
+                                <button class="btn btn-outline-primary" onclick="reviewAlert('VEL_001')">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                                <button class="btn btn-outline-danger" onclick="blockActivity('VEL_001')">
+                                    <i class="fas fa-ban"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-footer text-center">
+                    <a href="/app/admin/alerts" class="btn btn-sm btn-outline-danger">
+                        View All Risk Alerts
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Pending Reviews -->
+        <div class="col-lg-6 mb-4">
+            <div class="card h-100">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">
+                        <i class="fas fa-clock me-2 text-warning"></i>Pending Reviews
+                    </h5>
+                    <span class="badge bg-warning">23 Pending</span>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>User</th>
+                                    <th>Type</th>
+                                    <th>Priority</th>
+                                    <th>Age</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>
+                                        <div class="fw-bold">Sarah Johnson</div>
+                                        <small class="text-muted">s.johnson@invest.com</small>
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-info">Accreditation</span>
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-danger">High</span>
+                                    </td>
+                                    <td>
+                                        <small>2 days</small>
+                                    </td>
+                                    <td>
+                                        <div class="btn-group btn-group-sm">
+                                            <button class="btn btn-outline-primary" onclick="reviewUser('USR_1248')">
+                                                <i class="fas fa-eye"></i>
+                                            </button>
+                                            <button class="btn btn-outline-success" onclick="approveUser('USR_1248')">
+                                                <i class="fas fa-check"></i>
+                                            </button>
+                                            <button class="btn btn-outline-danger" onclick="rejectUser('USR_1248')">
+                                                <i class="fas fa-times"></i>
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>
+                                        <div class="fw-bold">Michael Chen</div>
+                                        <small class="text-muted">m.chen@ventures.com</small>
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-warning">Document Review</span>
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-warning">Medium</span>
+                                    </td>
+                                    <td>
+                                        <small>5 hours</small>
+                                    </td>
+                                    <td>
+                                        <div class="btn-group btn-group-sm">
+                                            <button class="btn btn-outline-primary" onclick="reviewUser('USR_1249')">
+                                                <i class="fas fa-eye"></i>
+                                            </button>
+                                            <button class="btn btn-outline-success" onclick="approveUser('USR_1249')">
+                                                <i class="fas fa-check"></i>
+                                            </button>
+                                            <button class="btn btn-outline-danger" onclick="rejectUser('USR_1249')">
+                                                <i class="fas fa-times"></i>
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>
+                                        <div class="fw-bold">TechCorp Inc.</div>
+                                        <small class="text-muted">compliance@techcorp.com</small>
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-primary">Entity Verification</span>
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-success">Low</span>
+                                    </td>
+                                    <td>
+                                        <small>1 day</small>
+                                    </td>
+                                    <td>
+                                        <div class="btn-group btn-group-sm">
+                                            <button class="btn btn-outline-primary" onclick="reviewUser('ENT_001')">
+                                                <i class="fas fa-eye"></i>
+                                            </button>
+                                            <button class="btn btn-outline-success" onclick="approveUser('ENT_001')">
+                                                <i class="fas fa-check"></i>
+                                            </button>
+                                            <button class="btn btn-outline-danger" onclick="rejectUser('ENT_001')">
+                                                <i class="fas fa-times"></i>
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <div class="card-footer text-center">
+                    <a href="/app/admin/reviews" class="btn btn-sm btn-outline-warning">
+                        View All Pending Reviews
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Compliance Tools -->
+    <div class="row">
+        <div class="col-lg-4 mb-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-tools me-2"></i>Compliance Tools
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="d-grid gap-2">
+                        <button class="btn btn-outline-primary" onclick="runKYCCheck()">
+                            <i class="fas fa-user-check me-2"></i>Run KYC Verification
+                        </button>
+                        <button class="btn btn-outline-info" onclick="generateSARReport()">
+                            <i class="fas fa-file-alt me-2"></i>Generate SAR Report
+                        </button>
+                        <button class="btn btn-outline-warning" onclick="reviewTransactionPatterns()">
+                            <i class="fas fa-chart-line me-2"></i>Transaction Patterns
+                        </button>
+                        <button class="btn btn-outline-secondary" onclick="exportAuditTrail()">
+                            <i class="fas fa-download me-2"></i>Export Audit Trail
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-8 mb-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-chart-bar me-2"></i>Compliance Metrics Overview
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="complianceMetricsChart" height="250"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Regulatory Requirements -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-balance-scale me-2"></i>Regulatory Compliance Status
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-3 mb-3">
+                            <div class="text-center">
+                                <div class="h4 text-success mb-1">
+                                    <i class="fas fa-check-circle"></i>
+                                </div>
+                                <h6 class="mb-1">SEC Rule 506(c)</h6>
+                                <small class="text-muted">Compliant</small>
+                                <div class="progress mt-2" style="height: 4px;">
+                                    <div class="progress-bar bg-success" style="width: 100%"></div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <div class="text-center">
+                                <div class="h4 text-success mb-1">
+                                    <i class="fas fa-check-circle"></i>
+                                </div>
+                                <h6 class="mb-1">AML/BSA</h6>
+                                <small class="text-muted">Compliant</small>
+                                <div class="progress mt-2" style="height: 4px;">
+                                    <div class="progress-bar bg-success" style="width: 95%"></div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <div class="text-center">
+                                <div class="h4 text-warning mb-1">
+                                    <i class="fas fa-exclamation-triangle"></i>
+                                </div>
+                                <h6 class="mb-1">FINRA</h6>
+                                <small class="text-muted">Review Required</small>
+                                <div class="progress mt-2" style="height: 4px;">
+                                    <div class="progress-bar bg-warning" style="width: 85%"></div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <div class="text-center">
+                                <div class="h4 text-success mb-1">
+                                    <i class="fas fa-check-circle"></i>
+                                </div>
+                                <h6 class="mb-1">GDPR</h6>
+                                <small class="text-muted">Compliant</small>
+                                <div class="progress mt-2" style="height: 4px;">
+                                    <div class="progress-bar bg-success" style="width: 100%"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{{end}}
+
+{{define "scripts"}}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    loadComplianceMetricsChart();
+});
+
+function loadComplianceMetricsChart() {
+    const ctx = document.getElementById('complianceMetricsChart').getContext('2d');
+    
+    new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
+            datasets: [{
+                label: 'Compliant Users',
+                data: [920, 945, 980, 1020, 1089, 1156],
+                backgroundColor: 'rgba(25, 135, 84, 0.8)',
+            }, {
+                label: 'Pending Reviews',
+                data: [45, 38, 42, 35, 28, 23],
+                backgroundColor: 'rgba(255, 193, 7, 0.8)',
+            }, {
+                label: 'Risk Flags',
+                data: [12, 15, 8, 11, 9, 7],
+                backgroundColor: 'rgba(220, 53, 69, 0.8)',
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'top',
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true
+                }
+            }
+        }
+    });
+}
+
+function generateComplianceReport() {
+    showToast('Generating compliance report...', 'info');
+    // Simulate report generation
+    setTimeout(() => {
+        showToast('Compliance report generated successfully', 'success');
+    }, 2000);
+}
+
+function runComplianceCheck() {
+    showToast('Running automated compliance check...', 'info');
+    // Simulate compliance check
+    setTimeout(() => {
+        showToast('Compliance check completed - 3 new issues found', 'warning');
+    }, 3000);
+}
+
+function showRiskAlerts() {
+    showToast('Displaying high-priority risk alerts', 'warning', {
+        autoHide: false,
+        icon: 'fas fa-exclamation-triangle'
+    });
+}
+
+function reviewAlert(alertId) {
+    showToast(`Opening detailed review for alert ${alertId}`, 'info');
+}
+
+function approveAlert(alertId) {
+    if (confirm(`Approve and dismiss alert ${alertId}?`)) {
+        showToast(`Alert ${alertId} approved and dismissed`, 'success');
+    }
+}
+
+function notifyUser(alertId) {
+    showToast(`Notification sent to user for ${alertId}`, 'info');
+}
+
+function blockActivity(alertId) {
+    if (confirm(`Block suspicious activity for ${alertId}?`)) {
+        showToast(`Activity blocked for ${alertId}`, 'warning');
+    }
+}
+
+function reviewUser(userId) {
+    showToast(`Opening user review for ${userId}`, 'info');
+}
+
+function approveUser(userId) {
+    if (confirm(`Approve user ${userId} for trading?`)) {
+        showToast(`User ${userId} approved for trading`, 'success');
+    }
+}
+
+function rejectUser(userId) {
+    const reason = prompt(`Reject user ${userId}. Please provide reason:`);
+    if (reason) {
+        showToast(`User ${userId} rejected: ${reason}`, 'warning');
+    }
+}
+
+function runKYCCheck() {
+    showToast('Initiating KYC verification process...', 'info');
+}
+
+function generateSARReport() {
+    showToast('Generating Suspicious Activity Report...', 'info');
+}
+
+function reviewTransactionPatterns() {
+    showToast('Analyzing transaction patterns for anomalies...', 'info');
+}
+
+function exportAuditTrail() {
+    showToast('Preparing audit trail export...', 'info');
+}
+</script>
+{{end}}

@@ -36,6 +36,16 @@ const (
 	UserInactive  UserStatus = "inactive"
 )
 
+// DocumentInfo represents an uploaded document
+type DocumentInfo struct {
+	Name       string    `json:"name"`
+	Type       string    `json:"type"`
+	Size       int64     `json:"size"`
+	Hash       string    `json:"hash"`
+	UploadedAt time.Time `json:"uploadedAt"`
+	URL        string    `json:"url,omitempty"`
+}
+
 // AccreditationInfo holds accreditation details
 type AccreditationInfo struct {
 	Type         string            `json:"type"`

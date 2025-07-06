@@ -1,0 +1,25 @@
+FROM registry.fedoraproject.org/fedora:38
+
+# Install development tools
+RUN dnf update -y && dnf install -y \
+    golang \
+    postgresql \
+    postgresql-server \
+    redis \
+    git \
+    make \
+    gcc \
+    sqlite-devel \
+    && dnf clean all
+
+# Install Air for live reloading
+RUN go install github.com/cosmtrek/air@latest
+
+# Install migrate tool
+RUN go install -tags 'postgres' github.com/golang-migrate/migrate/v4/cmd/migrate@latest
+
+# Install testing tools
+RUN go install github.com/onsi/ginkgo/v2/ginkgo@latest
+RUN go install gotest.tools/gotestsum@latest
+
+WORKDIR /workspace

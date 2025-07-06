@@ -1,0 +1,180 @@
+{{template "base.html" .}}
+
+{{define "title"}}{{.Title}}{{end}}
+
+{{define "content"}}
+<div class="container mx-auto px-4 py-8">
+    <div class="max-w-4xl mx-auto">
+        <div class="bg-white rounded-lg shadow-md">
+            <!-- Header -->
+            <div class="px-6 py-4 border-b border-gray-200">
+                <h1 class="text-2xl font-bold text-gray-900">User Profile</h1>
+                <p class="text-sm text-gray-600">Manage your account information and compliance status</p>
+            </div>
+            
+            <!-- Profile Information -->
+            <div class="p-6">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <!-- Basic Information -->
+                    <div class="space-y-4">
+                        <h2 class="text-lg font-semibold text-gray-900">Basic Information</h2>
+                        
+                        <form method="POST" action="/users/{{.User.ID}}/profile" class="space-y-4">
+                            <div>
+                                <label for="firstName" class="block text-sm font-medium text-gray-700 mb-1">First Name</label>
+                                <input type="text" id="firstName" name="firstName" value="{{.User.FirstName}}"
+                                       class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                            </div>
+                            
+                            <div>
+                                <label for="lastName" class="block text-sm font-medium text-gray-700 mb-1">Last Name</label>
+                                <input type="text" id="lastName" name="lastName" value="{{.User.LastName}}"
+                                       class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                            </div>
+                            
+                            <div>
+                                <label for="email" class="block text-sm font-medium text-gray-700 mb-1">Email Address</label>
+                                <input type="email" id="email" name="email" value="{{.User.Email}}"
+                                       class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                            </div>
+                            
+                            <div class="pt-4">
+                                <button type="submit" 
+                                        class="bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                    Update Profile
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                    
+                    <!-- Account Status -->
+                    <div class="space-y-4">
+                        <h2 class="text-lg font-semibold text-gray-900">Account Status</h2>
+                        
+                        <div class="space-y-3">
+                            <!-- Account Status -->
+                            <div class="flex justify-between items-center p-3 bg-gray-50 rounded-md">
+                                <span class="text-sm font-medium text-gray-700">Account Status</span>
+                                <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full 
+                                    {{if eq .User.Status "active"}}bg-green-100 text-green-800{{else}}bg-red-100 text-red-800{{end}}">
+                                    {{.User.Status | title}}
+                                </span>
+                            </div>
+                            
+                            <!-- Accreditation Status -->
+                            <div class="flex justify-between items-center p-3 bg-gray-50 rounded-md">
+                                <span class="text-sm font-medium text-gray-700">Accreditation Status</span>
+                                <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full
+                                    {{if eq .User.Accreditation.Status "verified"}}bg-green-100 text-green-800{{else if eq .User.Accreditation.Status "pending"}}bg-yellow-100 text-yellow-800{{else}}bg-red-100 text-red-800{{end}}">
+                                    {{.User.Accreditation.Status | title}}
+                                </span>
+                            </div>
+                            
+                            <!-- Compliance Status -->
+                            <div class="flex justify-between items-center p-3 bg-gray-50 rounded-md">
+                                <span class="text-sm font-medium text-gray-700">Compliance Status</span>
+                                <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full
+                                    {{if eq .User.Compliance.OverallStatus "clear"}}bg-green-100 text-green-800{{else if eq .User.Compliance.OverallStatus "pending"}}bg-yellow-100 text-yellow-800{{else}}bg-red-100 text-red-800{{end}}">
+                                    {{.User.Compliance.OverallStatus | title}}
+                                </span>
+                            </div>
+                            
+                            <!-- Trading Eligibility -->
+                            <div class="flex justify-between items-center p-3 bg-gray-50 rounded-md">
+                                <span class="text-sm font-medium text-gray-700">Trading Eligible</span>
+                                <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full
+                                    {{if .User.CanTrade}}bg-green-100 text-green-800{{else}}bg-red-100 text-red-800{{end}}">
+                                    {{if .User.CanTrade}}Yes{{else}}No{{end}}
+                                </span>
+                            </div>
+                        </div>
+                        
+                        <!-- Action Buttons -->
+                        <div class="pt-4 space-y-2">
+                            {{if not .User.IsAccredited}}
+                            <a href="/users/{{.User.ID}}/accreditation" 
+                               class="block w-full text-center bg-yellow-600 text-white py-2 px-4 rounded-md hover:bg-yellow-700">
+                                Submit Accreditation
+                            </a>
+                            {{end}}
+                            
+                            <a href="/users/{{.User.ID}}/portfolio" 
+                               class="block w-full text-center bg-gray-600 text-white py-2 px-4 rounded-md hover:bg-gray-700">
+                                View Portfolio
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Accreditation Details -->
+                {{if .User.Accreditation.Type}}
+                <div class="mt-8 pt-6 border-t border-gray-200">
+                    <h2 class="text-lg font-semibold text-gray-900 mb-4">Accreditation Details</h2>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div>
+                            <span class="text-sm font-medium text-gray-700">Type</span>
+                            <p class="text-sm text-gray-600">{{.User.Accreditation.Type | replace "_" " " | title}}</p>
+                        </div>
+                        
+                        {{if .User.Accreditation.ValidUntil}}
+                        <div>
+                            <span class="text-sm font-medium text-gray-700">Valid Until</span>
+                            <p class="text-sm text-gray-600">{{.User.Accreditation.ValidUntil.Format "Jan 2, 2006"}}</p>
+                        </div>
+                        {{end}}
+                        
+                        {{if .User.Accreditation.VerifiedAt}}
+                        <div>
+                            <span class="text-sm font-medium text-gray-700">Verified Date</span>
+                            <p class="text-sm text-gray-600">{{.User.Accreditation.VerifiedAt.Format "Jan 2, 2006"}}</p>
+                        </div>
+                        {{end}}
+                    </div>
+                </div>
+                {{end}}
+                
+                <!-- Compliance Details -->
+                <div class="mt-8 pt-6 border-t border-gray-200">
+                    <h2 class="text-lg font-semibold text-gray-900 mb-4">Compliance Checks</h2>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div class="p-3 bg-gray-50 rounded-md">
+                            <span class="text-sm font-medium text-gray-700">KYC Status</span>
+                            <p class="text-sm {{if eq .User.Compliance.KYCStatus "clear"}}text-green-600{{else if eq .User.Compliance.KYCStatus "pending"}}text-yellow-600{{else}}text-red-600{{end}}">
+                                {{.User.Compliance.KYCStatus | title}}
+                            </p>
+                        </div>
+                        
+                        <div class="p-3 bg-gray-50 rounded-md">
+                            <span class="text-sm font-medium text-gray-700">AML Status</span>
+                            <p class="text-sm {{if eq .User.Compliance.AMLStatus "clear"}}text-green-600{{else if eq .User.Compliance.AMLStatus "pending"}}text-yellow-600{{else}}text-red-600{{end}}">
+                                {{.User.Compliance.AMLStatus | title}}
+                            </p>
+                        </div>
+                        
+                        <div class="p-3 bg-gray-50 rounded-md">
+                            <span class="text-sm font-medium text-gray-700">Sanctions Check</span>
+                            <p class="text-sm {{if eq .User.Compliance.SanctionsStatus "clear"}}text-green-600{{else if eq .User.Compliance.SanctionsStatus "pending"}}text-yellow-600{{else}}text-red-600{{end}}">
+                                {{.User.Compliance.SanctionsStatus | title}}
+                            </p>
+                        </div>
+                    </div>
+                    
+                    {{if .User.Compliance.LastCheck}}
+                    <div class="mt-4">
+                        <span class="text-sm font-medium text-gray-700">Last Compliance Check: </span>
+                        <span class="text-sm text-gray-600">{{.User.Compliance.LastCheck.Format "Jan 2, 2006 at 3:04 PM"}}</span>
+                    </div>
+                    {{end}}
+                    
+                    {{if .User.Compliance.NextReview}}
+                    <div class="mt-2">
+                        <span class="text-sm font-medium text-gray-700">Next Review Due: </span>
+                        <span class="text-sm text-gray-600">{{.User.Compliance.NextReview.Format "Jan 2, 2006"}}</span>
+                    </div>
+                    {{end}}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{{end}}

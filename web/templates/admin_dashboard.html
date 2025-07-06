@@ -1,0 +1,560 @@
+{{template "base.html" .}}
+
+{{define "content"}}
+<div class="container-fluid">
+    <!-- Admin Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h1 class="h3 mb-1">
+                        <i class="fas fa-cog me-2 text-danger"></i>
+                        Admin Dashboard
+                    </h1>
+                    <p class="text-muted mb-0">
+                        System administration and management console
+                    </p>
+                </div>
+                <div>
+                    <div class="btn-group" role="group">
+                        <button class="btn btn-outline-primary btn-sm" onclick="refreshSystemStats()">
+                            <i class="fas fa-sync-alt me-1"></i>Refresh
+                        </button>
+                        <button class="btn btn-outline-warning btn-sm" onclick="showSystemHealth()">
+                            <i class="fas fa-heartbeat me-1"></i>Health Check
+                        </button>
+                        <button class="btn btn-outline-danger btn-sm" onclick="showSystemAlerts()">
+                            <i class="fas fa-exclamation-triangle me-1"></i>Alerts
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- System Overview Cards -->
+    <div class="row mb-4">
+        <div class="col-lg-3 col-md-6 mb-3">
+            <div class="card bg-info text-white h-100">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-grow-1">
+                            <h6 class="card-title mb-1">Total Users</h6>
+                            <h4 class="mb-0" id="total-users">1,247</h4>
+                            <small class="opacity-75">
+                                <i class="fas fa-arrow-up me-1"></i>
+                                +15 today
+                            </small>
+                        </div>
+                        <div class="ms-3">
+                            <i class="fas fa-users fa-2x opacity-75"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-lg-3 col-md-6 mb-3">
+            <div class="card bg-success text-white h-100">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-grow-1">
+                            <h6 class="card-title mb-1">Active Trades</h6>
+                            <h4 class="mb-0" id="active-trades">89</h4>
+                            <small class="opacity-75">Settlement pending</small>
+                        </div>
+                        <div class="ms-3">
+                            <i class="fas fa-exchange-alt fa-2x opacity-75"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-lg-3 col-md-6 mb-3">
+            <div class="card bg-warning text-white h-100">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-grow-1">
+                            <h6 class="card-title mb-1">System Load</h6>
+                            <h4 class="mb-0" id="system-load">23%</h4>
+                            <small class="opacity-75">Normal operation</small>
+                        </div>
+                        <div class="ms-3">
+                            <i class="fas fa-server fa-2x opacity-75"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-lg-3 col-md-6 mb-3">
+            <div class="card bg-danger text-white h-100">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-grow-1">
+                            <h6 class="card-title mb-1">Alerts</h6>
+                            <h4 class="mb-0" id="system-alerts">3</h4>
+                            <small class="opacity-75">Requires attention</small>
+                        </div>
+                        <div class="ms-3">
+                            <i class="fas fa-exclamation-triangle fa-2x opacity-75"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Quick Actions -->
+        <div class="col-lg-4 mb-4">
+            <div class="card h-100">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-bolt me-2"></i>Quick Actions
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="d-grid gap-2">
+                        <a href="/app/admin/users" class="btn btn-outline-primary">
+                            <i class="fas fa-users me-2"></i>Manage Users
+                        </a>
+                        <a href="/app/admin/compliance" class="btn btn-outline-warning">
+                            <i class="fas fa-clipboard-check me-2"></i>Compliance Center
+                        </a>
+                        <a href="/app/admin/audit" class="btn btn-outline-info">
+                            <i class="fas fa-search me-2"></i>Audit Logs
+                        </a>
+                        <a href="/app/admin/system" class="btn btn-outline-secondary">
+                            <i class="fas fa-cogs me-2"></i>System Settings
+                        </a>
+                        <button class="btn btn-outline-danger" onclick="showMaintenanceMode()">
+                            <i class="fas fa-tools me-2"></i>Maintenance Mode
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Recent Activity -->
+        <div class="col-lg-8 mb-4">
+            <div class="card h-100">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">
+                        <i class="fas fa-clock me-2"></i>Recent System Activity
+                    </h5>
+                    <div class="btn-group btn-group-sm" role="group">
+                        <input type="radio" class="btn-check" name="activityFilter" id="all" autocomplete="off" checked>
+                        <label class="btn btn-outline-primary" for="all">All</label>
+                        
+                        <input type="radio" class="btn-check" name="activityFilter" id="errors" autocomplete="off">
+                        <label class="btn btn-outline-danger" for="errors">Errors</label>
+                        
+                        <input type="radio" class="btn-check" name="activityFilter" id="warnings" autocomplete="off">
+                        <label class="btn btn-outline-warning" for="warnings">Warnings</label>
+                    </div>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Time</th>
+                                    <th>Event</th>
+                                    <th>User</th>
+                                    <th>Status</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="activity-log">
+                                <tr>
+                                    <td><small>10:34 AM</small></td>
+                                    <td>
+                                        <strong>User Registration</strong>
+                                        <br><small class="text-muted">New accredited investor account</small>
+                                    </td>
+                                    <td>john.doe@company.com</td>
+                                    <td><span class="badge bg-success">Success</span></td>
+                                    <td>
+                                        <button class="btn btn-sm btn-outline-primary" onclick="viewDetails('reg_001')">
+                                            <i class="fas fa-eye"></i>
+                                        </button>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><small>10:28 AM</small></td>
+                                    <td>
+                                        <strong>Trade Settlement</strong>
+                                        <br><small class="text-muted">$150,000 ACME Corp shares</small>
+                                    </td>
+                                    <td>system</td>
+                                    <td><span class="badge bg-success">Completed</span></td>
+                                    <td>
+                                        <button class="btn btn-sm btn-outline-primary" onclick="viewDetails('trade_089')">
+                                            <i class="fas fa-eye"></i>
+                                        </button>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><small>10:15 AM</small></td>
+                                    <td>
+                                        <strong>Compliance Alert</strong>
+                                        <br><small class="text-muted">Large transaction flagged for review</small>
+                                    </td>
+                                    <td>compliance.system</td>
+                                    <td><span class="badge bg-warning">Warning</span></td>
+                                    <td>
+                                        <button class="btn btn-sm btn-outline-warning" onclick="viewDetails('alert_012')">
+                                            <i class="fas fa-exclamation-triangle"></i>
+                                        </button>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><small>09:45 AM</small></td>
+                                    <td>
+                                        <strong>System Backup</strong>
+                                        <br><small class="text-muted">Automated daily backup completed</small>
+                                    </td>
+                                    <td>system</td>
+                                    <td><span class="badge bg-success">Success</span></td>
+                                    <td>
+                                        <button class="btn btn-sm btn-outline-secondary" onclick="viewDetails('backup_daily')">
+                                            <i class="fas fa-database"></i>
+                                        </button>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <div class="card-footer text-center">
+                    <a href="/app/admin/audit" class="btn btn-sm btn-outline-primary">
+                        View Complete Audit Log
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- System Metrics -->
+    <div class="row">
+        <div class="col-lg-6 mb-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-chart-area me-2"></i>System Performance
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="performanceChart" height="200"></canvas>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-lg-6 mb-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-chart-pie me-2"></i>User Distribution
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="userDistributionChart" height="200"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- System Status -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-heartbeat me-2"></i>System Health Status
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-3 mb-3">
+                            <div class="text-center">
+                                <div class="h4 text-success mb-1">
+                                    <i class="fas fa-check-circle"></i>
+                                </div>
+                                <h6 class="mb-1">Database</h6>
+                                <small class="text-muted">Operational</small>
+                            </div>
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <div class="text-center">
+                                <div class="h4 text-success mb-1">
+                                    <i class="fas fa-check-circle"></i>
+                                </div>
+                                <h6 class="mb-1">Redis Cache</h6>
+                                <small class="text-muted">Operational</small>
+                            </div>
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <div class="text-center">
+                                <div class="h4 text-warning mb-1">
+                                    <i class="fas fa-exclamation-triangle"></i>
+                                </div>
+                                <h6 class="mb-1">Email Service</h6>
+                                <small class="text-muted">Degraded</small>
+                            </div>
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <div class="text-center">
+                                <div class="h4 text-success mb-1">
+                                    <i class="fas fa-check-circle"></i>
+                                </div>
+                                <h6 class="mb-1">Payment Gateway</h6>
+                                <small class="text-muted">Operational</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Maintenance Mode Modal -->
+<div class="modal fade" id="maintenanceModeModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-warning text-dark">
+                <h5 class="modal-title">
+                    <i class="fas fa-tools me-2"></i>Maintenance Mode
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="alert alert-warning">
+                    <strong>Warning:</strong> Enabling maintenance mode will prevent all users from accessing the platform.
+                </div>
+                <div class="mb-3">
+                    <label for="maintenanceReason" class="form-label">Reason for maintenance:</label>
+                    <textarea class="form-control" id="maintenanceReason" rows="3" placeholder="System updates, database maintenance, etc."></textarea>
+                </div>
+                <div class="mb-3">
+                    <label for="estimatedDuration" class="form-label">Estimated duration (minutes):</label>
+                    <input type="number" class="form-control" id="estimatedDuration" value="30" min="1">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-warning" onclick="enableMaintenanceMode()">
+                    <i class="fas fa-tools me-2"></i>Enable Maintenance Mode
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{{end}}
+
+{{define "scripts"}}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    loadPerformanceChart();
+    loadUserDistributionChart();
+    startRealTimeUpdates();
+});
+
+function loadPerformanceChart() {
+    const ctx = document.getElementById('performanceChart').getContext('2d');
+    
+    new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: ['6h ago', '5h ago', '4h ago', '3h ago', '2h ago', '1h ago', 'Now'],
+            datasets: [{
+                label: 'CPU Usage %',
+                data: [25, 32, 28, 35, 23, 30, 23],
+                borderColor: 'rgb(255, 99, 132)',
+                backgroundColor: 'rgba(255, 99, 132, 0.1)',
+                tension: 0.1
+            }, {
+                label: 'Memory Usage %',
+                data: [45, 47, 50, 48, 52, 49, 48],
+                borderColor: 'rgb(54, 162, 235)',
+                backgroundColor: 'rgba(54, 162, 235, 0.1)',
+                tension: 0.1
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'top',
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    max: 100
+                }
+            }
+        }
+    });
+}
+
+function loadUserDistributionChart() {
+    const ctx = document.getElementById('userDistributionChart').getContext('2d');
+    
+    new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+            labels: ['Standard Users', 'Accredited Investors', 'Brokers', 'Compliance Officers'],
+            datasets: [{
+                data: [850, 320, 45, 32],
+                backgroundColor: [
+                    'rgb(54, 162, 235)',
+                    'rgb(255, 205, 86)',
+                    'rgb(255, 99, 132)',
+                    'rgb(75, 192, 192)'
+                ]
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'bottom',
+                }
+            }
+        }
+    });
+}
+
+function refreshSystemStats() {
+    const refreshBtn = document.querySelector('[onclick="refreshSystemStats()"]');
+    const originalHTML = refreshBtn.innerHTML;
+    refreshBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Refreshing...';
+    refreshBtn.disabled = true;
+    
+    // Simulate API call
+    setTimeout(() => {
+        // Update stats with new data
+        document.getElementById('total-users').textContent = (1247 + Math.floor(Math.random() * 5)).toLocaleString();
+        document.getElementById('active-trades').textContent = (89 + Math.floor(Math.random() * 10));
+        document.getElementById('system-load').textContent = (23 + Math.floor(Math.random() * 10)) + '%';
+        
+        refreshBtn.innerHTML = originalHTML;
+        refreshBtn.disabled = false;
+        
+        showToast('System statistics refreshed', 'success');
+    }, 1500);
+}
+
+function showSystemHealth() {
+    // Simulate health check
+    showToast('Running comprehensive health check...', 'info');
+    
+    setTimeout(() => {
+        showToast('System health check completed - All services operational', 'success');
+    }, 2000);
+}
+
+function showSystemAlerts() {
+    // Show alerts modal or navigate to alerts page
+    showToast('3 system alerts require attention', 'warning', {
+        autoHide: false,
+        icon: 'fas fa-exclamation-triangle'
+    });
+}
+
+function showMaintenanceMode() {
+    const modal = new bootstrap.Modal(document.getElementById('maintenanceModeModal'));
+    modal.show();
+}
+
+function enableMaintenanceMode() {
+    const reason = document.getElementById('maintenanceReason').value;
+    const duration = document.getElementById('estimatedDuration').value;
+    
+    if (!reason.trim()) {
+        showToast('Please provide a reason for maintenance', 'error');
+        return;
+    }
+    
+    // Close modal
+    const modal = bootstrap.Modal.getInstance(document.getElementById('maintenanceModeModal'));
+    modal.hide();
+    
+    // Show confirmation
+    if (confirm(`Enable maintenance mode for ${duration} minutes?\n\nReason: ${reason}`)) {
+        showToast('Maintenance mode enabled - Platform access restricted', 'warning', {
+            autoHide: false,
+            icon: 'fas fa-tools'
+        });
+    }
+}
+
+function viewDetails(id) {
+    // Navigate to detailed view based on item type
+    console.log('Viewing details for:', id);
+    showToast(`Loading details for ${id}...`, 'info');
+}
+
+function startRealTimeUpdates() {
+    // Simulate real-time updates every 30 seconds
+    setInterval(() => {
+        const alerts = document.getElementById('system-alerts');
+        const currentAlerts = parseInt(alerts.textContent);
+        
+        // Randomly update alert count
+        if (Math.random() > 0.7) {
+            const newAlerts = Math.max(0, currentAlerts + (Math.random() > 0.5 ? 1 : -1));
+            alerts.textContent = newAlerts;
+            
+            if (newAlerts > currentAlerts) {
+                showToast('New system alert detected', 'warning');
+            }
+        }
+        
+        // Update system load
+        const load = document.getElementById('system-load');
+        const newLoad = Math.max(10, Math.min(90, parseInt(load.textContent) + (Math.random() * 10 - 5)));
+        load.textContent = Math.round(newLoad) + '%';
+        
+    }, 30000);
+}
+
+// Activity log filtering
+document.addEventListener('DOMContentLoaded', function() {
+    const filterButtons = document.querySelectorAll('input[name="activityFilter"]');
+    filterButtons.forEach(button => {
+        button.addEventListener('change', function() {
+            filterActivityLog(this.id);
+        });
+    });
+});
+
+function filterActivityLog(filter) {
+    const rows = document.querySelectorAll('#activity-log tr');
+    
+    rows.forEach(row => {
+        const statusBadge = row.querySelector('.badge');
+        if (!statusBadge) return;
+        
+        const isError = statusBadge.classList.contains('bg-danger');
+        const isWarning = statusBadge.classList.contains('bg-warning');
+        
+        switch (filter) {
+            case 'errors':
+                row.style.display = isError ? '' : 'none';
+                break;
+            case 'warnings':
+                row.style.display = isWarning ? '' : 'none';
+                break;
+            default:
+                row.style.display = '';
+        }
+    });
+}
+</script>
+{{end}}

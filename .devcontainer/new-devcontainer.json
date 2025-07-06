@@ -1,0 +1,31 @@
+{
+  "name": "Securities Marketplace",
+  "dockerFile": "new-Dockerfile",
+  "runArgs": [
+    "--runtime", "crun",
+    "--security-opt", "label=disable"
+  ],
+  "containerEnv": {
+    "CGO_ENABLED": "1",
+    "GOOS": "linux"
+  },
+  "features": {
+    "ghcr.io/devcontainers/features/go:1": {
+      "version": "1.21"
+    },
+    "ghcr.io/devcontainers/features/postgres:1": {
+      "version": "15"
+    }
+  },
+  "forwardPorts": [8080, 5432, 6379],
+  "postCreateCommand": "make setup",
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "golang.go",
+        "ms-vscode.vscode-json",
+        "bradlc.vscode-tailwindcss"
+      ]
+    }
+  }
+}
