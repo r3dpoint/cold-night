@@ -1,0 +1,141 @@
+{{define "navigation"}}
+<!-- Responsive navigation component -->
+<nav class="bg-white shadow-lg" x-data="{ mobileOpen: false }">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="flex justify-between h-16">
+            <!-- Logo and main navigation -->
+            <div class="flex">
+                <div class="flex-shrink-0 flex items-center">
+                    <a href="/" class="flex items-center">
+                        <i class="fas fa-chart-line text-blue-600 text-2xl mr-2"></i>
+                        <span class="text-xl font-bold text-gray-900">{{.AppName | default "SecuriTrade"}}</span>
+                    </a>
+                </div>
+                
+                <!-- Desktop navigation -->
+                <div class="hidden md:ml-6 md:flex md:space-x-8">
+                    {{range .NavigationItems}}
+                    <a href="{{.URL}}" class="{{if .Active}}border-blue-500 text-gray-900{{else}}border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700{{end}} inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium">
+                        {{if .Icon}}<i class="{{.Icon}} mr-2"></i>{{end}}
+                        {{.Label}}
+                        {{if .Badge}}
+                        <span class="ml-2 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium {{.Badge.Class}}">
+                            {{.Badge.Text}}
+                        </span>
+                        {{end}}
+                    </a>
+                    {{end}}
+                </div>
+            </div>
+
+            <!-- User menu and mobile menu button -->
+            <div class="flex items-center">
+                {{if .User}}
+                <!-- User menu dropdown -->
+                <div class="relative ml-3" x-data="{ userMenuOpen: false }">
+                    <div>
+                        <button @click="userMenuOpen = !userMenuOpen" class="bg-white rounded-full flex text-sm focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                            <span class="sr-only">Open user menu</span>
+                            {{if .User.Avatar}}
+                            <img class="h-8 w-8 rounded-full" src="{{.User.Avatar}}" alt="{{.User.FullName}}">
+                            {{else}}
+                            <div class="h-8 w-8 bg-blue-100 rounded-full flex items-center justify-center">
+                                <i class="fas fa-user text-blue-600"></i>
+                            </div>
+                            {{end}}
+                        </button>
+                    </div>
+                    
+                    <div x-show="userMenuOpen" @click.away="userMenuOpen = false" x-transition 
+                         class="origin-top-right absolute right-0 mt-2 w-48 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5">
+                        <div class="py-1">
+                            <!-- User info -->
+                            <div class="px-4 py-2 border-b border-gray-100">
+                                <p class="text-sm text-gray-900">{{.User.FullName}}</p>
+                                <p class="text-sm text-gray-500">{{.User.Email}}</p>
+                                {{if .User.Roles}}
+                                <div class="mt-1">
+                                    {{range .User.Roles}}
+                                    <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium {{if eq . "admin"}}bg-red-100 text-red-800{{else if eq . "broker"}}bg-green-100 text-green-800{{else if eq . "compliance"}}bg-yellow-100 text-yellow-800{{else}}bg-blue-100 text-blue-800{{end}} mr-1">
+                                        {{. | title}}
+                                    </span>
+                                    {{end}}
+                                </div>
+                                {{end}}
+                            </div>
+                            
+                            <!-- Menu items -->
+                            {{range .UserMenuItems}}
+                            {{if .Divider}}
+                            <div class="border-t border-gray-100"></div>
+                            {{else}}
+                            <a href="{{.URL}}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                                {{if .Icon}}<i class="{{.Icon}} mr-2"></i>{{end}}
+                                {{.Label}}
+                            </a>
+                            {{end}}
+                            {{end}}
+                        </div>
+                    </div>
+                </div>
+                {{else}}
+                <!-- Login/Register links -->
+                <div class="flex items-center space-x-4">
+                    <a href="/login" class="text-gray-500 hover:text-gray-700 text-sm font-medium">Login</a>
+                    <a href="/register" class="bg-blue-600 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-blue-700">Register</a>
+                </div>
+                {{end}}
+
+                <!-- Mobile menu button -->
+                <div class="md:hidden ml-4">
+                    <button @click="mobileOpen = !mobileOpen" class="bg-white rounded-md p-2 inline-flex items-center justify-center text-gray-400 hover:text-gray-500 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-blue-500">
+                        <span class="sr-only">Open main menu</span>
+                        <i x-show="!mobileOpen" class="fas fa-bars"></i>
+                        <i x-show="mobileOpen" class="fas fa-times"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Mobile menu -->
+    <div x-show="mobileOpen" x-transition class="md:hidden">
+        <div class="pt-2 pb-3 space-y-1 sm:px-3">
+            {{range .NavigationItems}}
+            <a href="{{.URL}}" class="{{if .Active}}bg-blue-50 border-blue-500 text-blue-700{{else}}border-transparent text-gray-500 hover:bg-gray-50 hover:border-gray-300 hover:text-gray-700{{end}} block pl-3 pr-4 py-2 border-l-4 text-base font-medium">
+                {{if .Icon}}<i class="{{.Icon}} mr-2"></i>{{end}}
+                {{.Label}}
+            </a>
+            {{end}}
+        </div>
+        
+        {{if .User}}
+        <div class="pt-4 pb-3 border-t border-gray-200">
+            <div class="flex items-center px-4">
+                {{if .User.Avatar}}
+                <img class="h-10 w-10 rounded-full" src="{{.User.Avatar}}" alt="{{.User.FullName}}">
+                {{else}}
+                <div class="h-10 w-10 bg-blue-100 rounded-full flex items-center justify-center">
+                    <i class="fas fa-user text-blue-600"></i>
+                </div>
+                {{end}}
+                <div class="ml-3">
+                    <div class="text-base font-medium text-gray-800">{{.User.FullName}}</div>
+                    <div class="text-sm font-medium text-gray-500">{{.User.Email}}</div>
+                </div>
+            </div>
+            <div class="mt-3 space-y-1">
+                {{range .UserMenuItems}}
+                {{if not .Divider}}
+                <a href="{{.URL}}" class="block px-4 py-2 text-base font-medium text-gray-500 hover:text-gray-800 hover:bg-gray-100">
+                    {{if .Icon}}<i class="{{.Icon}} mr-2"></i>{{end}}
+                    {{.Label}}
+                </a>
+                {{end}}
+                {{end}}
+            </div>
+        </div>
+        {{end}}
+    </div>
+</nav>
+{{end}}

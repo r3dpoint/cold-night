@@ -1,0 +1,474 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{.Title}} - Broker Dashboard</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Font Awesome Icons -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    
+    <!-- Chart.js for trading charts -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <!-- TradingView Charting Library -->
+    <script src="https://s3.tradingview.com/tv.js"></script>
+    
+    <!-- DataTables for order management -->
+    <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.11.5/css/dataTables.tailwindcss.min.css">
+    <script type="text/javascript" src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script type="text/javascript" src="https://cdn.datatables.net/1.11.5/js/jquery.dataTables.min.js"></script>
+    
+    <!-- Custom CSS -->
+    <link href="/static/css/style.css" rel="stylesheet">
+</head>
+<body class="bg-gray-900 text-white">
+    <!-- Header -->
+    <header class="bg-gray-800 shadow-sm border-b border-gray-700">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16">
+                <!-- Logo and Brand -->
+                <div class="flex items-center">
+                    <div class="flex-shrink-0">
+                        <a href="/broker" class="flex items-center">
+                            <i class="fas fa-chart-candlestick text-green-500 text-2xl mr-2"></i>
+                            <span class="text-xl font-bold text-white">Broker Pro</span>
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Market Status and Tools -->
+                <div class="flex items-center space-x-6">
+                    <!-- Market Status -->
+                    <div class="hidden md:flex items-center space-x-4">
+                        <div class="flex items-center">
+                            <div class="w-2 h-2 bg-green-400 rounded-full mr-2 animate-pulse"></div>
+                            <span class="text-sm text-gray-300">Market Open</span>
+                        </div>
+                        <div class="text-sm text-gray-300">
+                            <span>Volume: </span>
+                            <span class="text-green-400 font-mono">{{.MarketStats.Volume}}</span>
+                        </div>
+                    </div>
+
+                    <!-- Quick Actions -->
+                    <div class="flex items-center space-x-2">
+                        <button class="px-3 py-1 bg-green-600 text-white text-sm rounded hover:bg-green-700">
+                            <i class="fas fa-plus mr-1"></i>Quick Buy
+                        </button>
+                        <button class="px-3 py-1 bg-red-600 text-white text-sm rounded hover:bg-red-700">
+                            <i class="fas fa-minus mr-1"></i>Quick Sell
+                        </button>
+                    </div>
+
+                    <!-- User Menu -->
+                    <div class="relative" x-data="{ open: false }">
+                        <button @click="open = !open" class="flex items-center space-x-2 px-3 py-2 text-sm text-gray-300 hover:text-white">
+                            <div class="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
+                                <i class="fas fa-user-tie text-green-600"></i>
+                            </div>
+                            <span class="font-medium">{{.User.FirstName}} {{.User.LastName}}</span>
+                            <span class="px-2 py-1 text-xs font-semibold text-green-800 bg-green-100 rounded-full">Broker</span>
+                            <i class="fas fa-chevron-down text-xs"></i>
+                        </button>
+
+                        <div x-show="open" @click.away="open = false" x-transition 
+                             class="absolute right-0 mt-2 w-56 bg-gray-800 rounded-md shadow-lg py-1 z-50 border border-gray-700">
+                            <a href="/broker/profile" class="block px-4 py-2 text-sm text-gray-300 hover:bg-gray-700">
+                                <i class="fas fa-user mr-2"></i>Broker Profile
+                            </a>
+                            <a href="/broker/clients" class="block px-4 py-2 text-sm text-gray-300 hover:bg-gray-700">
+                                <i class="fas fa-users mr-2"></i>My Clients
+                            </a>
+                            <a href="/broker/performance" class="block px-4 py-2 text-sm text-gray-300 hover:bg-gray-700">
+                                <i class="fas fa-chart-line mr-2"></i>Performance
+                            </a>
+                            <div class="border-t border-gray-700"></div>
+                            <a href="/dashboard" class="block px-4 py-2 text-sm text-gray-300 hover:bg-gray-700">
+                                <i class="fas fa-user mr-2"></i>Switch to Client View
+                            </a>
+                            <div class="border-t border-gray-700"></div>
+                            <form method="POST" action="/logout" class="block">
+                                <button type="submit" class="w-full text-left px-4 py-2 text-sm text-gray-300 hover:bg-gray-700">
+                                    <i class="fas fa-sign-out-alt mr-2"></i>Logout
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Layout -->
+    <div class="flex h-screen">
+        <!-- Sidebar Navigation -->
+        <nav class="w-64 bg-gray-800 shadow-sm border-r border-gray-700 pt-4">
+            <div class="px-3">
+                <!-- Performance Summary -->
+                <div class="mb-6">
+                    <div class="bg-gradient-to-r from-green-900 to-green-800 p-4 rounded-lg border border-green-700">
+                        <h3 class="text-xs font-semibold text-green-200 uppercase tracking-wider mb-2">
+                            Today's P&L
+                        </h3>
+                        <div class="text-2xl font-bold {{if gt .Stats.PnL 0}}text-green-400{{else}}text-red-400{{end}}">
+                            {{if gt .Stats.PnL 0}}+{{end}}${{.Stats.PnL | printf "%.2f"}}
+                        </div>
+                        <div class="flex justify-between mt-2 text-xs text-green-200">
+                            <span>Trades: {{.Stats.TradesToday}}</span>
+                            <span>Volume: ${{.Stats.VolumeToday}}</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Navigation Items -->
+                <div class="space-y-1">
+                    <a href="/broker" class="{{if eq .CurrentPath "/broker"}}bg-green-900 border-green-500 text-green-200{{else}}border-transparent text-gray-300 hover:bg-gray-700{{end}} group border-l-4 px-3 py-2 flex items-center text-sm font-medium">
+                        <i class="{{if eq .CurrentPath "/broker"}}text-green-400{{else}}text-gray-400 group-hover:text-gray-300{{end}} fas fa-tachometer-alt mr-3"></i>
+                        Dashboard
+                    </a>
+
+                    <a href="/broker/trading" class="{{if eq .CurrentPath "/broker/trading"}}bg-green-900 border-green-500 text-green-200{{else}}border-transparent text-gray-300 hover:bg-gray-700{{end}} group border-l-4 px-3 py-2 flex items-center text-sm font-medium">
+                        <i class="{{if eq .CurrentPath "/broker/trading"}}text-green-400{{else}}text-gray-400 group-hover:text-gray-300{{end}} fas fa-chart-candlestick mr-3"></i>
+                        Trading Terminal
+                    </a>
+
+                    <a href="/broker/orders" class="{{if eq .CurrentPath "/broker/orders"}}bg-green-900 border-green-500 text-green-200{{else}}border-transparent text-gray-300 hover:bg-gray-700{{end}} group border-l-4 px-3 py-2 flex items-center text-sm font-medium">
+                        <i class="{{if eq .CurrentPath "/broker/orders"}}text-green-400{{else}}text-gray-400 group-hover:text-gray-300{{end}} fas fa-list-alt mr-3"></i>
+                        Order Management
+                        {{if .Stats.PendingOrders}}
+                        <span class="ml-auto inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
+                            {{.Stats.PendingOrders}}
+                        </span>
+                        {{end}}
+                    </a>
+
+                    <a href="/broker/clients" class="{{if eq .CurrentPath "/broker/clients"}}bg-green-900 border-green-500 text-green-200{{else}}border-transparent text-gray-300 hover:bg-gray-700{{end}} group border-l-4 px-3 py-2 flex items-center text-sm font-medium">
+                        <i class="{{if eq .CurrentPath "/broker/clients"}}text-green-400{{else}}text-gray-400 group-hover:text-gray-300{{end}} fas fa-users mr-3"></i>
+                        Client Management
+                    </a>
+
+                    <a href="/broker/portfolio" class="{{if eq .CurrentPath "/broker/portfolio"}}bg-green-900 border-green-500 text-green-200{{else}}border-transparent text-gray-300 hover:bg-gray-700{{end}} group border-l-4 px-3 py-2 flex items-center text-sm font-medium">
+                        <i class="{{if eq .CurrentPath "/broker/portfolio"}}text-green-400{{else}}text-gray-400 group-hover:text-gray-300{{end}} fas fa-briefcase mr-3"></i>
+                        Portfolio Analysis
+                    </a>
+
+                    <a href="/broker/research" class="{{if eq .CurrentPath "/broker/research"}}bg-green-900 border-green-500 text-green-200{{else}}border-transparent text-gray-300 hover:bg-gray-700{{end}} group border-l-4 px-3 py-2 flex items-center text-sm font-medium">
+                        <i class="{{if eq .CurrentPath "/broker/research"}}text-green-400{{else}}text-gray-400 group-hover:text-gray-300{{end}} fas fa-microscope mr-3"></i>
+                        Research & Analytics
+                    </a>
+
+                    <a href="/broker/reports" class="{{if eq .CurrentPath "/broker/reports"}}bg-green-900 border-green-500 text-green-200{{else}}border-transparent text-gray-300 hover:bg-gray-700{{end}} group border-l-4 px-3 py-2 flex items-center text-sm font-medium">
+                        <i class="{{if eq .CurrentPath "/broker/reports"}}text-green-400{{else}}text-gray-400 group-hover:text-gray-300{{end}} fas fa-file-alt mr-3"></i>
+                        Reports
+                    </a>
+                </div>
+
+                <!-- Quick Market Watch -->
+                <div class="mt-8">
+                    <h3 class="px-3 text-xs font-semibold text-gray-400 uppercase tracking-wider">
+                        Quick Watch
+                    </h3>
+                    <div class="mt-2 space-y-1">
+                        {{range .WatchlistSecurities}}
+                        <div class="px-3 py-2 hover:bg-gray-700 rounded cursor-pointer">
+                            <div class="flex items-center justify-between">
+                                <span class="text-sm text-gray-300">{{.Symbol}}</span>
+                                <span class="text-sm font-mono {{if gt .PriceChange 0}}text-green-400{{else}}text-red-400{{end}}">
+                                    ${{.CurrentPrice | printf "%.2f"}}
+                                </span>
+                            </div>
+                            <div class="flex items-center justify-between">
+                                <span class="text-xs text-gray-500">{{.Name}}</span>
+                                <span class="text-xs font-mono {{if gt .PriceChange 0}}text-green-400{{else}}text-red-400{{end}}">
+                                    {{if gt .PriceChange 0}}+{{end}}{{.PriceChangePercent | printf "%.2f"}}%
+                                </span>
+                            </div>
+                        </div>
+                        {{end}}
+                    </div>
+                </div>
+            </div>
+        </nav>
+
+        <!-- Main Content Area -->
+        <div class="flex-1 flex flex-col overflow-hidden">
+            <!-- Page Header -->
+            {{if .PageTitle}}
+            <div class="bg-gray-800 border-b border-gray-700 px-6 py-4">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <h1 class="text-2xl font-bold text-white">{{.PageTitle}}</h1>
+                        {{if .PageDescription}}
+                        <p class="mt-1 text-sm text-gray-400">{{.PageDescription}}</p>
+                        {{end}}
+                    </div>
+                    {{if .PageActions}}
+                    <div class="flex space-x-3">
+                        {{range .PageActions}}
+                        <a href="{{.URL}}" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md {{if .Primary}}text-white bg-green-600 hover:bg-green-700{{else if .Danger}}text-white bg-red-600 hover:bg-red-700{{else}}text-gray-900 bg-gray-200 hover:bg-gray-300{{end}}">
+                            {{if .Icon}}<i class="{{.Icon}} mr-2"></i>{{end}}
+                            {{.Label}}
+                        </a>
+                        {{end}}
+                    </div>
+                    {{end}}
+                </div>
+            </div>
+            {{end}}
+
+            <!-- Content -->
+            <main class="flex-1 overflow-y-auto bg-gray-900 p-6">
+                <!-- Trading Alerts -->
+                {{if .TradingAlerts}}
+                <div class="mb-6">
+                    {{range .TradingAlerts}}
+                    <div class="bg-yellow-900 border-l-4 border-yellow-400 p-4 mb-4">
+                        <div class="flex">
+                            <div class="flex-shrink-0">
+                                <i class="fas fa-exclamation-triangle text-yellow-400"></i>
+                            </div>
+                            <div class="ml-3">
+                                <h3 class="text-sm font-medium text-yellow-200">{{.Title}}</h3>
+                                <div class="mt-2 text-sm text-yellow-100">
+                                    <p>{{.Description}}</p>
+                                </div>
+                                {{if .Actions}}
+                                <div class="mt-4">
+                                    <div class="-mx-2 -my-1.5 flex">
+                                        {{range .Actions}}
+                                        <a href="{{.URL}}" class="bg-yellow-800 px-2 py-1.5 rounded-md text-sm font-medium text-yellow-100 hover:bg-yellow-700 mr-2">
+                                            {{.Label}}
+                                        </a>
+                                        {{end}}
+                                    </div>
+                                </div>
+                                {{end}}
+                            </div>
+                        </div>
+                    </div>
+                    {{end}}
+                </div>
+                {{end}}
+
+                <!-- Main Content -->
+                {{template "content" .}}
+            </main>
+        </div>
+    </div>
+
+    <!-- Trading order modal -->
+    <div id="orderModal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50">
+        <div class="flex items-center justify-center min-h-screen p-4">
+            <div class="bg-gray-800 rounded-lg p-6 w-full max-w-md">
+                <h3 class="text-lg font-medium text-white mb-4">Quick Order</h3>
+                <form id="quickOrderForm">
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-300">Security</label>
+                            <input type="text" id="orderSecurity" class="mt-1 block w-full bg-gray-700 border border-gray-600 rounded-md px-3 py-2 text-white">
+                        </div>
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-300">Side</label>
+                                <select id="orderSide" class="mt-1 block w-full bg-gray-700 border border-gray-600 rounded-md px-3 py-2 text-white">
+                                    <option value="buy">Buy</option>
+                                    <option value="sell">Sell</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-300">Quantity</label>
+                                <input type="number" id="orderQuantity" class="mt-1 block w-full bg-gray-700 border border-gray-600 rounded-md px-3 py-2 text-white">
+                            </div>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-300">Price</label>
+                            <input type="number" step="0.01" id="orderPrice" class="mt-1 block w-full bg-gray-700 border border-gray-600 rounded-md px-3 py-2 text-white">
+                        </div>
+                        <div class="flex justify-end space-x-3">
+                            <button type="button" onclick="closeOrderModal()" class="px-4 py-2 bg-gray-600 text-white rounded hover:bg-gray-700">
+                                Cancel
+                            </button>
+                            <button type="submit" class="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700">
+                                Place Order
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Alpine.js for interactive components -->
+    <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    
+    <!-- Custom JavaScript -->
+    <script src="/static/js/app.js"></script>
+    
+    <!-- Broker-specific JavaScript -->
+    <script>
+        // Real-time market data WebSocket
+        let tradingWs;
+        function connectTradingWebSocket() {
+            tradingWs = new WebSocket(`ws://${location.host}/ws/trading`);
+            
+            tradingWs.onmessage = function(event) {
+                const data = JSON.parse(event.data);
+                updateTradingData(data);
+            };
+            
+            tradingWs.onclose = function() {
+                // Reconnect after 3 seconds
+                setTimeout(connectTradingWebSocket, 3000);
+            };
+        }
+        
+        function updateTradingData(data) {
+            switch (data.type) {
+                case 'price_update':
+                    updateSecurityPrice(data);
+                    break;
+                case 'order_fill':
+                    handleOrderFill(data);
+                    break;
+                case 'trade_alert':
+                    showTradeAlert(data);
+                    break;
+            }
+        }
+        
+        function updateSecurityPrice(data) {
+            const elements = document.querySelectorAll(`[data-security="${data.securityId}"]`);
+            elements.forEach(element => {
+                if (element.dataset.field === 'price') {
+                    element.textContent = `$${data.currentPrice.toFixed(2)}`;
+                    element.className = data.priceChange > 0 ? 'text-green-400' : 'text-red-400';
+                }
+                if (element.dataset.field === 'change') {
+                    element.textContent = `${data.priceChange > 0 ? '+' : ''}${data.priceChangePercent.toFixed(2)}%`;
+                    element.className = data.priceChange > 0 ? 'text-green-400' : 'text-red-400';
+                }
+            });
+        }
+        
+        function handleOrderFill(data) {
+            // Show order fill notification
+            showNotification(`Order filled: ${data.quantity} shares of ${data.symbol} at $${data.price}`, 'success');
+            
+            // Update order table if visible
+            const orderRow = document.querySelector(`[data-order-id="${data.orderId}"]`);
+            if (orderRow) {
+                orderRow.querySelector('.order-status').textContent = 'Filled';
+                orderRow.querySelector('.order-status').className = 'px-2 py-1 text-xs font-semibold text-green-800 bg-green-100 rounded-full';
+            }
+        }
+        
+        function showTradeAlert(alert) {
+            showNotification(alert.message, 'warning');
+        }
+        
+        function showNotification(message, type = 'info') {
+            const colors = {
+                success: 'bg-green-100 border-green-400 text-green-700',
+                warning: 'bg-yellow-100 border-yellow-400 text-yellow-700',
+                error: 'bg-red-100 border-red-400 text-red-700',
+                info: 'bg-blue-100 border-blue-400 text-blue-700'
+            };
+            
+            const notification = document.createElement('div');
+            notification.className = `fixed top-4 right-4 ${colors[type]} px-4 py-3 rounded border z-50`;
+            notification.innerHTML = `
+                <div class="flex">
+                    <div class="flex-shrink-0">
+                        <i class="fas fa-info-circle"></i>
+                    </div>
+                    <div class="ml-3">
+                        <p class="text-sm">${message}</p>
+                    </div>
+                    <div class="ml-auto pl-3">
+                        <button onclick="this.parentElement.parentElement.remove()" class="hover:opacity-75">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(notification);
+            
+            // Auto-remove after 5 seconds
+            setTimeout(() => {
+                if (notification.parentElement) {
+                    notification.remove();
+                }
+            }, 5000);
+        }
+        
+        // Quick order functions
+        function showOrderModal(side, security) {
+            document.getElementById('orderModal').classList.remove('hidden');
+            if (side) document.getElementById('orderSide').value = side;
+            if (security) document.getElementById('orderSecurity').value = security;
+        }
+        
+        function closeOrderModal() {
+            document.getElementById('orderModal').classList.add('hidden');
+        }
+        
+        // Handle quick order form
+        document.getElementById('quickOrderForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const orderData = {
+                security: document.getElementById('orderSecurity').value,
+                side: document.getElementById('orderSide').value,
+                quantity: parseInt(document.getElementById('orderQuantity').value),
+                price: parseFloat(document.getElementById('orderPrice').value)
+            };
+            
+            fetch('/broker/api/orders', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(orderData)
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    showNotification('Order placed successfully', 'success');
+                    closeOrderModal();
+                    // Reset form
+                    document.getElementById('quickOrderForm').reset();
+                } else {
+                    showNotification('Error placing order: ' + data.message, 'error');
+                }
+            })
+            .catch(error => {
+                showNotification('Error placing order: ' + error.message, 'error');
+            });
+        });
+        
+        // Quick buy/sell buttons
+        document.addEventListener('DOMContentLoaded', function() {
+            // Connect to trading WebSocket
+            connectTradingWebSocket();
+            
+            // Initialize DataTables for trading tables
+            $('.trading-table').DataTable({
+                responsive: true,
+                pageLength: 25,
+                order: [[0, 'desc']],
+                language: {
+                    search: "Search orders:",
+                    lengthMenu: "Show _MENU_ orders per page",
+                }
+            });
+        });
+    </script>
+    
+    <!-- Page-specific scripts -->
+    {{template "scripts" .}}
+</body>
+</html>

@@ -1,0 +1,190 @@
+{{define "form-field"}}
+<!-- Reusable form field component -->
+<div class="{{.WrapperClass | default "mb-4"}}">
+    {{if .Label}}
+    <label for="{{.ID}}" class="block text-sm font-medium text-gray-700 mb-1">
+        {{.Label}}
+        {{if .Required}}<span class="text-red-500">*</span>{{end}}
+    </label>
+    {{end}}
+    
+    {{if eq .Type "select"}}
+    <select id="{{.ID}}" name="{{.Name}}" {{if .Required}}required{{end}} 
+            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 {{.Class}}">
+        {{if .Placeholder}}
+        <option value="">{{.Placeholder}}</option>
+        {{end}}
+        {{range .Options}}
+        <option value="{{.Value}}" {{if .Selected}}selected{{end}}>{{.Label}}</option>
+        {{end}}
+    </select>
+    
+    {{else if eq .Type "textarea"}}
+    <textarea id="{{.ID}}" name="{{.Name}}" {{if .Required}}required{{end}} {{if .Rows}}rows="{{.Rows}}"{{end}}
+              class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 {{.Class}}"
+              {{if .Placeholder}}placeholder="{{.Placeholder}}"{{end}}>{{.Value}}</textarea>
+    
+    {{else if eq .Type "checkbox"}}
+    <div class="flex items-center">
+        <input type="checkbox" id="{{.ID}}" name="{{.Name}}" value="{{.Value}}" {{if .Checked}}checked{{end}}
+               class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded {{.Class}}">
+        {{if .CheckboxLabel}}
+        <label for="{{.ID}}" class="ml-2 block text-sm text-gray-900">{{.CheckboxLabel}}</label>
+        {{end}}
+    </div>
+    
+    {{else if eq .Type "radio"}}
+    <div class="space-y-2">
+        {{range .Options}}
+        <div class="flex items-center">
+            <input type="radio" id="{{$.ID}}_{{.Value}}" name="{{$.Name}}" value="{{.Value}}" {{if .Selected}}checked{{end}}
+                   class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300">
+            <label for="{{$.ID}}_{{.Value}}" class="ml-2 block text-sm text-gray-900">{{.Label}}</label>
+        </div>
+        {{end}}
+    </div>
+    
+    {{else if eq .Type "file"}}
+    <div class="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-md">
+        <div class="space-y-1 text-center">
+            <i class="fas fa-cloud-upload-alt text-3xl text-gray-400"></i>
+            <div class="flex text-sm text-gray-600">
+                <label for="{{.ID}}" class="relative cursor-pointer bg-white rounded-md font-medium text-blue-600 hover:text-blue-500 focus-within:outline-none focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-blue-500">
+                    <span>Upload a file</span>
+                    <input id="{{.ID}}" name="{{.Name}}" type="file" {{if .Multiple}}multiple{{end}} {{if .Accept}}accept="{{.Accept}}"{{end}} class="sr-only">
+                </label>
+                <p class="pl-1">or drag and drop</p>
+            </div>
+            {{if .Accept}}
+            <p class="text-xs text-gray-500">{{.Accept}} files only</p>
+            {{end}}
+        </div>
+    </div>
+    
+    {{else}}
+    <input type="{{.Type | default "text"}}" id="{{.ID}}" name="{{.Name}}" value="{{.Value}}" 
+           {{if .Required}}required{{end}} {{if .Placeholder}}placeholder="{{.Placeholder}}"{{end}}
+           {{if .MinLength}}minlength="{{.MinLength}}"{{end}} {{if .MaxLength}}maxlength="{{.MaxLength}}"{{end}}
+           {{if .Min}}min="{{.Min}}"{{end}} {{if .Max}}max="{{.Max}}"{{end}} {{if .Step}}step="{{.Step}}"{{end}}
+           class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 {{.Class}}">
+    {{end}}
+    
+    {{if .Help}}
+    <p class="mt-1 text-sm text-gray-500">{{.Help}}</p>
+    {{end}}
+    
+    {{if .Error}}
+    <p class="mt-1 text-sm text-red-600">{{.Error}}</p>
+    {{end}}
+</div>
+{{end}}
+
+{{define "form-buttons"}}
+<!-- Form action buttons -->
+<div class="{{.WrapperClass | default "flex justify-end space-x-3 pt-4"}}">
+    {{if .CancelURL}}
+    <a href="{{.CancelURL}}" class="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+        {{.CancelText | default "Cancel"}}
+    </a>
+    {{end}}
+    
+    {{range .SecondaryButtons}}
+    <button type="{{.Type | default "button"}}" class="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 {{.Class}}">
+        {{if .Icon}}<i class="{{.Icon}} mr-2"></i>{{end}}
+        {{.Label}}
+    </button>
+    {{end}}
+    
+    <button type="submit" class="px-4 py-2 border border-transparent rounded-md text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 {{.SubmitClass}}">
+        {{if .SubmitIcon}}<i class="{{.SubmitIcon}} mr-2"></i>{{end}}
+        {{.SubmitText | default "Submit"}}
+    </button>
+</div>
+{{end}}
+
+{{define "search-form"}}
+<!-- Search form component -->
+<form method="GET" class="{{.WrapperClass | default "mb-6"}}">
+    <div class="flex items-center space-x-4">
+        <div class="flex-1 relative">
+            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                <i class="fas fa-search text-gray-400"></i>
+            </div>
+            <input type="text" name="{{.SearchParam | default "search"}}" value="{{.SearchValue}}" 
+                   placeholder="{{.Placeholder | default "Search..."}}"
+                   class="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-blue-500 focus:border-blue-500">
+        </div>
+        
+        {{if .Filters}}
+        {{range .Filters}}
+        <div class="flex-shrink-0">
+            <select name="{{.Name}}" class="block w-full px-3 py-2 border border-gray-300 rounded-md bg-white focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500">
+                <option value="">{{.Placeholder}}</option>
+                {{range .Options}}
+                <option value="{{.Value}}" {{if .Selected}}selected{{end}}>{{.Label}}</option>
+                {{end}}
+            </select>
+        </div>
+        {{end}}
+        {{end}}
+        
+        <div class="flex-shrink-0">
+            <button type="submit" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                <i class="fas fa-search mr-2"></i>
+                Search
+            </button>
+        </div>
+        
+        {{if .ClearURL}}
+        <div class="flex-shrink-0">
+            <a href="{{.ClearURL}}" class="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                Clear
+            </a>
+        </div>
+        {{end}}
+    </div>
+</form>
+{{end}}
+
+{{define "validation-errors"}}
+<!-- Validation errors display -->
+{{if .Errors}}
+<div class="bg-red-50 border border-red-200 rounded-md p-4 mb-6">
+    <div class="flex">
+        <div class="flex-shrink-0">
+            <i class="fas fa-exclamation-circle text-red-400"></i>
+        </div>
+        <div class="ml-3">
+            <h3 class="text-sm font-medium text-red-800">
+                There {{if eq (len .Errors) 1}}was an error{{else}}were errors{{end}} with your submission
+            </h3>
+            <div class="mt-2 text-sm text-red-700">
+                <ul class="list-disc list-inside space-y-1">
+                    {{range .Errors}}
+                    <li>{{.}}</li>
+                    {{end}}
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+{{end}}
+{{end}}
+
+{{define "form-section"}}
+<!-- Form section with title and description -->
+<div class="{{.WrapperClass | default "mb-8"}}">
+    {{if .Title}}
+    <div class="{{.HeaderClass | default "mb-6"}}">
+        <h3 class="text-lg font-medium text-gray-900">{{.Title}}</h3>
+        {{if .Description}}
+        <p class="mt-1 text-sm text-gray-600">{{.Description}}</p>
+        {{end}}
+    </div>
+    {{end}}
+    
+    <div class="{{.ContentClass | default "bg-white shadow rounded-lg p-6"}}">
+        {{.Content}}
+    </div>
+</div>
+{{end}}

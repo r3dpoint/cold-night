@@ -1,0 +1,221 @@
+{{define "data-table"}}
+<!-- Responsive data table component -->
+<div class="{{.WrapperClass | default "bg-white shadow overflow-hidden sm:rounded-md"}}">
+    {{if .Title}}
+    <div class="px-4 py-5 sm:px-6">
+        <h3 class="text-lg leading-6 font-medium text-gray-900">{{.Title}}</h3>
+        {{if .Description}}
+        <p class="mt-1 max-w-2xl text-sm text-gray-500">{{.Description}}</p>
+        {{end}}
+    </div>
+    {{end}}
+    
+    <div class="overflow-x-auto">
+        <table class="min-w-full divide-y divide-gray-200 {{.TableClass}}">
+            {{if .Headers}}
+            <thead class="bg-gray-50">
+                <tr>
+                    {{range .Headers}}
+                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider {{.Class}}">
+                        {{if .Sortable}}
+                        <a href="{{.SortURL}}" class="group inline-flex">
+                            {{.Label}}
+                            {{if .Sorted}}
+                            <span class="ml-2 flex-none rounded text-gray-400 group-hover:visible">
+                                <i class="fas fa-chevron-{{if .SortDesc}}down{{else}}up{{end}}"></i>
+                            </span>
+                            {{end}}
+                        </a>
+                        {{else}}
+                        {{.Label}}
+                        {{end}}
+                    </th>
+                    {{end}}
+                </tr>
+            </thead>
+            {{end}}
+            
+            <tbody class="bg-white divide-y divide-gray-200">
+                {{range .Rows}}
+                <tr class="{{if .Class}}{{.Class}}{{else}}hover:bg-gray-50{{end}}" {{if .ID}}data-row-id="{{.ID}}"{{end}}>
+                    {{range .Cells}}
+                    <td class="px-6 py-4 whitespace-nowrap {{.Class}}">
+                        {{if .Link}}
+                        <a href="{{.Link}}" class="text-blue-600 hover:text-blue-900">{{.Content}}</a>
+                        {{else if .Badge}}
+                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium {{.Badge.Class}}">
+                            {{.Content}}
+                        </span>
+                        {{else if .Actions}}
+                        <div class="flex items-center space-x-2">
+                            {{range .Actions}}
+                            <a href="{{.URL}}" class="text-{{.Color | default "blue"}}-600 hover:text-{{.Color | default "blue"}}-900 text-sm">
+                                {{if .Icon}}<i class="{{.Icon}}"></i>{{else}}{{.Label}}{{end}}
+                            </a>
+                            {{end}}
+                        </div>
+                        {{else}}
+                        {{.Content}}
+                        {{end}}
+                    </td>
+                    {{end}}
+                </tr>
+                {{end}}
+            </tbody>
+        </table>
+    </div>
+    
+    {{if .EmptyMessage}}
+    {{if not .Rows}}
+    <div class="text-center py-12">
+        <i class="fas fa-inbox text-gray-400 text-3xl mb-4"></i>
+        <p class="text-gray-500">{{.EmptyMessage}}</p>
+    </div>
+    {{end}}
+    {{end}}
+</div>
+{{end}}
+
+{{define "status-badge"}}
+<!-- Status badge component -->
+<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium
+    {{if eq .Status "active" "approved" "verified" "completed" "success"}}bg-green-100 text-green-800
+    {{else if eq .Status "pending" "processing" "warning"}}bg-yellow-100 text-yellow-800
+    {{else if eq .Status "inactive" "rejected" "revoked" "cancelled" "failed" "error"}}bg-red-100 text-red-800
+    {{else if eq .Status "draft" "info"}}bg-blue-100 text-blue-800
+    {{else}}bg-gray-100 text-gray-800{{end}} {{.Class}}">
+    {{if .Icon}}<i class="{{.Icon}} mr-1"></i>{{end}}
+    {{.Label | default .Status | title}}
+</span>
+{{end}}
+
+{{define "action-menu"}}
+<!-- Dropdown action menu -->
+<div class="relative inline-block text-left" x-data="{ open: false }">
+    <div>
+        <button @click="open = !open" type="button" class="bg-white rounded-full flex items-center text-gray-400 hover:text-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+            <span class="sr-only">Open options</span>
+            <i class="fas fa-ellipsis-v h-5 w-5"></i>
+        </button>
+    </div>
+
+    <div x-show="open" @click.away="open = false" x-transition 
+         class="origin-top-right absolute right-0 mt-2 w-56 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 z-10">
+        <div class="py-1">
+            {{range .Actions}}
+            {{if .Divider}}
+            <div class="border-t border-gray-100"></div>
+            {{else if .Confirm}}
+            <button onclick="if(confirm('{{.Confirm}}')) window.location.href='{{.URL}}'" 
+                    class="{{if .Danger}}text-red-700{{else}}text-gray-700{{end}} group flex items-center px-4 py-2 text-sm hover:bg-gray-100 w-full text-left">
+                {{if .Icon}}<i class="{{.Icon}} mr-3 h-5 w-5 {{if .Danger}}text-red-400{{else}}text-gray-400{{end}} group-hover:{{if .Danger}}text-red-500{{else}}text-gray-500{{end}}"></i>{{end}}
+                {{.Label}}
+            </button>
+            {{else}}
+            <a href="{{.URL}}" class="{{if .Danger}}text-red-700{{else}}text-gray-700{{end}} group flex items-center px-4 py-2 text-sm hover:bg-gray-100">
+                {{if .Icon}}<i class="{{.Icon}} mr-3 h-5 w-5 {{if .Danger}}text-red-400{{else}}text-gray-400{{end}} group-hover:{{if .Danger}}text-red-500{{else}}text-gray-500{{end}}"></i>{{end}}
+                {{.Label}}
+            </a>
+            {{end}}
+            {{end}}
+        </div>
+    </div>
+</div>
+{{end}}
+
+{{define "pagination"}}
+<!-- Pagination component -->
+{{if gt .TotalPages 1}}
+<div class="bg-white px-4 py-3 flex items-center justify-between border-t border-gray-200 sm:px-6">
+    <div class="flex-1 flex justify-between sm:hidden">
+        {{if gt .CurrentPage 1}}
+        <a href="{{.PrevURL}}" class="relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
+            Previous
+        </a>
+        {{end}}
+        {{if lt .CurrentPage .TotalPages}}
+        <a href="{{.NextURL}}" class="ml-3 relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
+            Next
+        </a>
+        {{end}}
+    </div>
+    
+    <div class="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
+        <div>
+            <p class="text-sm text-gray-700">
+                Showing
+                <span class="font-medium">{{.StartItem}}</span>
+                to
+                <span class="font-medium">{{.EndItem}}</span>
+                of
+                <span class="font-medium">{{.TotalItems}}</span>
+                results
+            </p>
+        </div>
+        <div>
+            <nav class="relative z-0 inline-flex rounded-md shadow-sm -space-x-px">
+                <!-- Previous page link -->
+                {{if gt .CurrentPage 1}}
+                <a href="{{.PrevURL}}" class="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">
+                    <span class="sr-only">Previous</span>
+                    <i class="fas fa-chevron-left h-5 w-5"></i>
+                </a>
+                {{else}}
+                <span class="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-gray-100 text-sm font-medium text-gray-300">
+                    <i class="fas fa-chevron-left h-5 w-5"></i>
+                </span>
+                {{end}}
+                
+                <!-- Page numbers -->
+                {{range .Pages}}
+                {{if .IsCurrent}}
+                <span class="relative inline-flex items-center px-4 py-2 border border-blue-500 bg-blue-50 text-sm font-medium text-blue-600">
+                    {{.Number}}
+                </span>
+                {{else if .IsEllipsis}}
+                <span class="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-700">
+                    ...
+                </span>
+                {{else}}
+                <a href="{{.URL}}" class="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50">
+                    {{.Number}}
+                </a>
+                {{end}}
+                {{end}}
+                
+                <!-- Next page link -->
+                {{if lt .CurrentPage .TotalPages}}
+                <a href="{{.NextURL}}" class="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">
+                    <span class="sr-only">Next</span>
+                    <i class="fas fa-chevron-right h-5 w-5"></i>
+                </a>
+                {{else}}
+                <span class="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-gray-100 text-sm font-medium text-gray-300">
+                    <i class="fas fa-chevron-right h-5 w-5"></i>
+                </span>
+                {{end}}
+            </nav>
+        </div>
+    </div>
+</div>
+{{end}}
+{{end}}
+
+{{define "expandable-row"}}
+<!-- Expandable table row -->
+<tr class="bg-white border-b hover:bg-gray-50" x-data="{ expanded: false }">
+    <td class="px-6 py-4 whitespace-nowrap">
+        <button @click="expanded = !expanded" class="text-gray-400 hover:text-gray-600">
+            <i :class="expanded ? 'fas fa-chevron-down' : 'fas fa-chevron-right'"></i>
+        </button>
+    </td>
+    {{range .MainCells}}
+    <td class="px-6 py-4 whitespace-nowrap {{.Class}}">{{.Content}}</td>
+    {{end}}
+</tr>
+<tr x-show="expanded" x-transition class="bg-gray-50">
+    <td colspan="{{add (len .MainCells) 1}}" class="px-6 py-4">
+        {{.ExpandedContent}}
+    </td>
+</tr>
+{{end}}

@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{.Title}} - Securities Marketplace</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Font Awesome Icons -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    
+    <!-- Chart.js for portfolio charts -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <!-- Custom CSS -->
+    <link href="/static/css/style.css" rel="stylesheet">
+</head>
+<body class="bg-gray-50">
+    <!-- Header -->
+    <header class="bg-white shadow-sm border-b border-gray-200">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16">
+                <!-- Logo and Brand -->
+                <div class="flex items-center">
+                    <div class="flex-shrink-0">
+                        <a href="/dashboard" class="flex items-center">
+                            <i class="fas fa-chart-line text-blue-600 text-2xl mr-2"></i>
+                            <span class="text-xl font-bold text-gray-900">SecuriTrade</span>
+                        </a>
+                    </div>
+                </div>
+
+                <!-- User Menu -->
+                <div class="flex items-center space-x-4">
+                    <!-- Notifications -->
+                    <button class="relative p-2 text-gray-500 hover:text-gray-700">
+                        <i class="fas fa-bell text-lg"></i>
+                        {{if .NotificationCount}}
+                        <span class="absolute top-0 right-0 -mt-1 -mr-1 px-2 py-1 text-xs font-bold leading-none text-white bg-red-600 rounded-full">{{.NotificationCount}}</span>
+                        {{end}}
+                    </button>
+
+                    <!-- User Menu Dropdown -->
+                    <div class="relative" x-data="{ open: false }">
+                        <button @click="open = !open" class="flex items-center space-x-2 px-3 py-2 text-sm text-gray-700 hover:text-gray-900">
+                            <div class="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
+                                <i class="fas fa-user text-blue-600"></i>
+                            </div>
+                            <span class="font-medium">{{.User.FirstName}} {{.User.LastName}}</span>
+                            {{if .User.IsAccredited}}
+                            <span class="px-2 py-1 text-xs font-semibold text-green-800 bg-green-100 rounded-full">Accredited</span>
+                            {{end}}
+                            <i class="fas fa-chevron-down text-xs"></i>
+                        </button>
+
+                        <div x-show="open" @click.away="open = false" x-transition 
+                             class="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-50">
+                            <a href="/profile" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                                <i class="fas fa-user mr-2"></i>My Profile
+                            </a>
+                            <a href="/portfolio" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                                <i class="fas fa-briefcase mr-2"></i>Portfolio
+                            </a>
+                            <a href="/settings" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                                <i class="fas fa-cog mr-2"></i>Settings
+                            </a>
+                            <div class="border-t border-gray-100"></div>
+                            <form method="POST" action="/logout" class="block">
+                                <button type="submit" class="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                                    <i class="fas fa-sign-out-alt mr-2"></i>Logout
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Layout -->
+    <div class="flex h-screen">
+        <!-- Sidebar Navigation -->
+        <nav class="w-64 bg-white shadow-sm border-r border-gray-200 pt-4">
+            <div class="px-3">
+                <!-- Navigation Items -->
+                <div class="space-y-1">
+                    <a href="/dashboard" class="{{if eq .CurrentPath "/dashboard"}}bg-blue-50 border-blue-500 text-blue-700{{else}}border-transparent text-gray-900 hover:bg-gray-50{{end}} group border-l-4 px-3 py-2 flex items-center text-sm font-medium">
+                        <i class="{{if eq .CurrentPath "/dashboard"}}text-blue-500{{else}}text-gray-400 group-hover:text-gray-500{{end}} fas fa-tachometer-alt mr-3"></i>
+                        Dashboard
+                    </a>
+
+                    <a href="/marketplace" class="{{if eq .CurrentPath "/marketplace"}}bg-blue-50 border-blue-500 text-blue-700{{else}}border-transparent text-gray-900 hover:bg-gray-50{{end}} group border-l-4 px-3 py-2 flex items-center text-sm font-medium">
+                        <i class="{{if eq .CurrentPath "/marketplace"}}text-blue-500{{else}}text-gray-400 group-hover:text-gray-500{{end}} fas fa-store mr-3"></i>
+                        Marketplace
+                    </a>
+
+                    <a href="/portfolio" class="{{if eq .CurrentPath "/portfolio"}}bg-blue-50 border-blue-500 text-blue-700{{else}}border-transparent text-gray-900 hover:bg-gray-50{{end}} group border-l-4 px-3 py-2 flex items-center text-sm font-medium">
+                        <i class="{{if eq .CurrentPath "/portfolio"}}text-blue-500{{else}}text-gray-400 group-hover:text-gray-500{{end}} fas fa-briefcase mr-3"></i>
+                        My Portfolio
+                    </a>
+
+                    <a href="/orders" class="{{if eq .CurrentPath "/orders"}}bg-blue-50 border-blue-500 text-blue-700{{else}}border-transparent text-gray-900 hover:bg-gray-50{{end}} group border-l-4 px-3 py-2 flex items-center text-sm font-medium">
+                        <i class="{{if eq .CurrentPath "/orders"}}text-blue-500{{else}}text-gray-400 group-hover:text-gray-500{{end}} fas fa-list-alt mr-3"></i>
+                        My Orders
+                    </a>
+
+                    <a href="/transactions" class="{{if eq .CurrentPath "/transactions"}}bg-blue-50 border-blue-500 text-blue-700{{else}}border-transparent text-gray-900 hover:bg-gray-50{{end}} group border-l-4 px-3 py-2 flex items-center text-sm font-medium">
+                        <i class="{{if eq .CurrentPath "/transactions"}}text-blue-500{{else}}text-gray-400 group-hover:text-gray-500{{end}} fas fa-exchange-alt mr-3"></i>
+                        Transactions
+                    </a>
+
+                    <a href="/watchlist" class="{{if eq .CurrentPath "/watchlist"}}bg-blue-50 border-blue-500 text-blue-700{{else}}border-transparent text-gray-900 hover:bg-gray-50{{end}} group border-l-4 px-3 py-2 flex items-center text-sm font-medium">
+                        <i class="{{if eq .CurrentPath "/watchlist"}}text-blue-500{{else}}text-gray-400 group-hover:text-gray-500{{end}} fas fa-eye mr-3"></i>
+                        Watchlist
+                    </a>
+                </div>
+
+                <!-- Account Status -->
+                <div class="mt-8">
+                    <h3 class="px-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                        Account Status
+                    </h3>
+                    <div class="mt-2 space-y-1">
+                        <div class="px-3 py-2">
+                            <div class="flex items-center justify-between">
+                                <span class="text-sm text-gray-600">Compliance</span>
+                                <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full {{if eq .User.ComplianceStatus "clear"}}bg-green-100 text-green-800{{else if eq .User.ComplianceStatus "pending"}}bg-yellow-100 text-yellow-800{{else}}bg-red-100 text-red-800{{end}}">
+                                    {{.User.ComplianceStatus | title}}
+                                </span>
+                            </div>
+                        </div>
+                        <div class="px-3 py-2">
+                            <div class="flex items-center justify-between">
+                                <span class="text-sm text-gray-600">Trading</span>
+                                <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full {{if .User.CanTrade}}bg-green-100 text-green-800{{else}}bg-red-100 text-red-800{{end}}">
+                                    {{if .User.CanTrade}}Enabled{{else}}Disabled{{end}}
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </nav>
+
+        <!-- Main Content Area -->
+        <div class="flex-1 flex flex-col overflow-hidden">
+            <!-- Page Header -->
+            {{if .PageTitle}}
+            <div class="bg-white border-b border-gray-200 px-6 py-4">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <h1 class="text-2xl font-bold text-gray-900">{{.PageTitle}}</h1>
+                        {{if .PageDescription}}
+                        <p class="mt-1 text-sm text-gray-600">{{.PageDescription}}</p>
+                        {{end}}
+                    </div>
+                    {{if .PageActions}}
+                    <div class="flex space-x-3">
+                        {{range .PageActions}}
+                        <a href="{{.URL}}" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700">
+                            {{if .Icon}}<i class="{{.Icon}} mr-2"></i>{{end}}
+                            {{.Label}}
+                        </a>
+                        {{end}}
+                    </div>
+                    {{end}}
+                </div>
+            </div>
+            {{end}}
+
+            <!-- Content -->
+            <main class="flex-1 overflow-y-auto bg-gray-50 p-6">
+                {{template "content" .}}
+            </main>
+        </div>
+    </div>
+
+    <!-- Live market data updates -->
+    <div id="market-updates" class="hidden"></div>
+
+    <!-- Alpine.js for interactive components -->
+    <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    
+    <!-- Custom JavaScript -->
+    <script src="/static/js/app.js"></script>
+    
+    <!-- Real-time market data -->
+    <script>
+        // WebSocket connection for real-time updates
+        let ws;
+        function connectWebSocket() {
+            ws = new WebSocket(`ws://${location.host}/ws/market-data`);
+            
+            ws.onmessage = function(event) {
+                const data = JSON.parse(event.data);
+                updateMarketData(data);
+            };
+            
+            ws.onclose = function() {
+                // Reconnect after 5 seconds
+                setTimeout(connectWebSocket, 5000);
+            };
+        }
+        
+        function updateMarketData(data) {
+            // Update market data displays
+            const elements = document.querySelectorAll(`[data-security="${data.securityId}"]`);
+            elements.forEach(element => {
+                if (element.dataset.field === 'price') {
+                    element.textContent = `$${data.currentPrice.toFixed(2)}`;
+                    element.classList.add(data.priceChange > 0 ? 'text-green-600' : 'text-red-600');
+                }
+            });
+        }
+        
+        // Connect on page load
+        document.addEventListener('DOMContentLoaded', connectWebSocket);
+    </script>
+    
+    <!-- Page-specific scripts -->
+    {{template "scripts" .}}
+</body>
+</html>

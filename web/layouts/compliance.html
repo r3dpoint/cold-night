@@ -1,0 +1,431 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{.Title}} - Compliance Center</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Font Awesome Icons -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    
+    <!-- Chart.js for compliance analytics -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <!-- DataTables for compliance records -->
+    <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.11.5/css/dataTables.tailwindcss.min.css">
+    <script type="text/javascript" src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script type="text/javascript" src="https://cdn.datatables.net/1.11.5/js/jquery.dataTables.min.js"></script>
+    
+    <!-- Custom CSS -->
+    <link href="/static/css/style.css" rel="stylesheet">
+</head>
+<body class="bg-gray-50">
+    <!-- Header -->
+    <header class="bg-white shadow-sm border-b border-gray-200">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16">
+                <!-- Logo and Brand -->
+                <div class="flex items-center">
+                    <div class="flex-shrink-0">
+                        <a href="/compliance" class="flex items-center">
+                            <i class="fas fa-shield-alt text-amber-600 text-2xl mr-2"></i>
+                            <span class="text-xl font-bold text-gray-900">Compliance Center</span>
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Compliance Alerts -->
+                <div class="flex items-center space-x-4">
+                    <!-- Risk Level Indicator -->
+                    <div class="hidden sm:flex items-center space-x-2">
+                        <span class="text-sm text-gray-600">System Risk Level:</span>
+                        <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full {{if eq .SystemRiskLevel "low"}}bg-green-100 text-green-800{{else if eq .SystemRiskLevel "medium"}}bg-yellow-100 text-yellow-800{{else}}bg-red-100 text-red-800{{end}}">
+                            {{.SystemRiskLevel | title}}
+                        </span>
+                    </div>
+
+                    <!-- Alerts -->
+                    <button class="relative p-2 text-gray-500 hover:text-gray-700">
+                        <i class="fas fa-exclamation-triangle text-lg"></i>
+                        {{if .ComplianceAlerts}}
+                        <span class="absolute top-0 right-0 -mt-1 -mr-1 px-2 py-1 text-xs font-bold leading-none text-white bg-red-600 rounded-full">{{.ComplianceAlerts}}</span>
+                        {{end}}
+                    </button>
+
+                    <!-- User Menu -->
+                    <div class="relative" x-data="{ open: false }">
+                        <button @click="open = !open" class="flex items-center space-x-2 px-3 py-2 text-sm text-gray-700 hover:text-gray-900">
+                            <div class="w-8 h-8 bg-amber-100 rounded-full flex items-center justify-center">
+                                <i class="fas fa-user-check text-amber-600"></i>
+                            </div>
+                            <span class="font-medium">{{.User.FirstName}} {{.User.LastName}}</span>
+                            <span class="px-2 py-1 text-xs font-semibold text-amber-800 bg-amber-100 rounded-full">Compliance</span>
+                            <i class="fas fa-chevron-down text-xs"></i>
+                        </button>
+
+                        <div x-show="open" @click.away="open = false" x-transition 
+                             class="absolute right-0 mt-2 w-56 bg-white rounded-md shadow-lg py-1 z-50">
+                            <a href="/compliance/profile" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                                <i class="fas fa-user mr-2"></i>My Profile
+                            </a>
+                            <a href="/compliance/settings" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                                <i class="fas fa-cog mr-2"></i>Settings
+                            </a>
+                            <div class="border-t border-gray-100"></div>
+                            <a href="/dashboard" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                                <i class="fas fa-user mr-2"></i>Switch to Client View
+                            </a>
+                            <div class="border-t border-gray-100"></div>
+                            <form method="POST" action="/logout" class="block">
+                                <button type="submit" class="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                                    <i class="fas fa-sign-out-alt mr-2"></i>Logout
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Layout -->
+    <div class="flex h-screen">
+        <!-- Sidebar Navigation -->
+        <nav class="w-64 bg-white shadow-sm border-r border-gray-200 pt-4">
+            <div class="px-3">
+                <!-- Quick Stats -->
+                <div class="mb-6">
+                    <div class="bg-gradient-to-r from-amber-50 to-yellow-50 p-4 rounded-lg border border-amber-200">
+                        <h3 class="text-xs font-semibold text-amber-800 uppercase tracking-wider mb-2">
+                            Today's Summary
+                        </h3>
+                        <div class="space-y-2">
+                            <div class="flex justify-between">
+                                <span class="text-xs text-amber-700">Pending Reviews</span>
+                                <span class="text-xs font-semibold text-amber-900">{{.Stats.PendingReviews}}</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-xs text-amber-700">Risk Alerts</span>
+                                <span class="text-xs font-semibold text-amber-900">{{.Stats.RiskAlerts}}</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-xs text-amber-700">New Cases</span>
+                                <span class="text-xs font-semibold text-amber-900">{{.Stats.NewCases}}</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Navigation Items -->
+                <div class="space-y-1">
+                    <a href="/compliance" class="{{if eq .CurrentPath "/compliance"}}bg-amber-50 border-amber-500 text-amber-700{{else}}border-transparent text-gray-900 hover:bg-gray-50{{end}} group border-l-4 px-3 py-2 flex items-center text-sm font-medium">
+                        <i class="{{if eq .CurrentPath "/compliance"}}text-amber-500{{else}}text-gray-400 group-hover:text-gray-500{{end}} fas fa-tachometer-alt mr-3"></i>
+                        Dashboard
+                    </a>
+
+                    <a href="/compliance/reviews" class="{{if eq .CurrentPath "/compliance/reviews"}}bg-amber-50 border-amber-500 text-amber-700{{else}}border-transparent text-gray-900 hover:bg-gray-50{{end}} group border-l-4 px-3 py-2 flex items-center text-sm font-medium">
+                        <i class="{{if eq .CurrentPath "/compliance/reviews"}}text-amber-500{{else}}text-gray-400 group-hover:text-gray-500{{end}} fas fa-clipboard-check mr-3"></i>
+                        KYC Reviews
+                        {{if .Stats.PendingReviews}}
+                        <span class="ml-auto inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                            {{.Stats.PendingReviews}}
+                        </span>
+                        {{end}}
+                    </a>
+
+                    <a href="/compliance/monitoring" class="{{if eq .CurrentPath "/compliance/monitoring"}}bg-amber-50 border-amber-500 text-amber-700{{else}}border-transparent text-gray-900 hover:bg-gray-50{{end}} group border-l-4 px-3 py-2 flex items-center text-sm font-medium">
+                        <i class="{{if eq .CurrentPath "/compliance/monitoring"}}text-amber-500{{else}}text-gray-400 group-hover:text-gray-500{{end}} fas fa-eye mr-3"></i>
+                        Trade Monitoring
+                    </a>
+
+                    <a href="/compliance/investigations" class="{{if eq .CurrentPath "/compliance/investigations"}}bg-amber-50 border-amber-500 text-amber-700{{else}}border-transparent text-gray-900 hover:bg-gray-50{{end}} group border-l-4 px-3 py-2 flex items-center text-sm font-medium">
+                        <i class="{{if eq .CurrentPath "/compliance/investigations"}}text-amber-500{{else}}text-gray-400 group-hover:text-gray-500{{end}} fas fa-search mr-3"></i>
+                        Investigations
+                    </a>
+
+                    <a href="/compliance/sanctions" class="{{if eq .CurrentPath "/compliance/sanctions"}}bg-amber-50 border-amber-500 text-amber-700{{else}}border-transparent text-gray-900 hover:bg-gray-50{{end}} group border-l-4 px-3 py-2 flex items-center text-sm font-medium">
+                        <i class="{{if eq .CurrentPath "/compliance/sanctions"}}text-amber-500{{else}}text-gray-400 group-hover:text-gray-500{{end}} fas fa-ban mr-3"></i>
+                        Sanctions Screening
+                    </a>
+
+                    <a href="/compliance/reports" class="{{if eq .CurrentPath "/compliance/reports"}}bg-amber-50 border-amber-500 text-amber-700{{else}}border-transparent text-gray-900 hover:bg-gray-50{{end}} group border-l-4 px-3 py-2 flex items-center text-sm font-medium">
+                        <i class="{{if eq .CurrentPath "/compliance/reports"}}text-amber-500{{else}}text-gray-400 group-hover:text-gray-500{{end}} fas fa-file-alt mr-3"></i>
+                        Regulatory Reports
+                    </a>
+
+                    <a href="/compliance/analytics" class="{{if eq .CurrentPath "/compliance/analytics"}}bg-amber-50 border-amber-500 text-amber-700{{else}}border-transparent text-gray-900 hover:bg-gray-50{{end}} group border-l-4 px-3 py-2 flex items-center text-sm font-medium">
+                        <i class="{{if eq .CurrentPath "/compliance/analytics"}}text-amber-500{{else}}text-gray-400 group-hover:text-gray-500{{end}} fas fa-chart-bar mr-3"></i>
+                        Risk Analytics
+                    </a>
+                </div>
+
+                <!-- Watchlist -->
+                <div class="mt-8">
+                    <h3 class="px-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                        Watchlist
+                    </h3>
+                    <div class="mt-2 space-y-1">
+                        <div class="px-3 py-2">
+                            <div class="flex items-center justify-between">
+                                <span class="text-sm text-gray-600">High Risk Users</span>
+                                <span class="inline-flex px-2 py-1 text-xs font-semibold text-red-800 bg-red-100 rounded-full">
+                                    {{.Stats.HighRiskUsers}}
+                                </span>
+                            </div>
+                        </div>
+                        <div class="px-3 py-2">
+                            <div class="flex items-center justify-between">
+                                <span class="text-sm text-gray-600">Flagged Trades</span>
+                                <span class="inline-flex px-2 py-1 text-xs font-semibold text-yellow-800 bg-yellow-100 rounded-full">
+                                    {{.Stats.FlaggedTrades}}
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </nav>
+
+        <!-- Main Content Area -->
+        <div class="flex-1 flex flex-col overflow-hidden">
+            <!-- Page Header -->
+            {{if .PageTitle}}
+            <div class="bg-white border-b border-gray-200 px-6 py-4">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <h1 class="text-2xl font-bold text-gray-900">{{.PageTitle}}</h1>
+                        {{if .PageDescription}}
+                        <p class="mt-1 text-sm text-gray-600">{{.PageDescription}}</p>
+                        {{end}}
+                    </div>
+                    {{if .PageActions}}
+                    <div class="flex space-x-3">
+                        {{range .PageActions}}
+                        <a href="{{.URL}}" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md {{if .Primary}}text-white bg-amber-600 hover:bg-amber-700{{else}}text-amber-700 bg-amber-100 hover:bg-amber-200{{end}}">
+                            {{if .Icon}}<i class="{{.Icon}} mr-2"></i>{{end}}
+                            {{.Label}}
+                        </a>
+                        {{end}}
+                    </div>
+                    {{end}}
+                </div>
+            </div>
+            {{end}}
+
+            <!-- Content -->
+            <main class="flex-1 overflow-y-auto bg-gray-50 p-6">
+                <!-- Risk Alerts Banner -->
+                {{if .RiskAlerts}}
+                <div class="mb-6">
+                    {{range .RiskAlerts}}
+                    <div class="bg-red-50 border-l-4 border-red-400 p-4 mb-4">
+                        <div class="flex">
+                            <div class="flex-shrink-0">
+                                <i class="fas fa-exclamation-triangle text-red-400"></i>
+                            </div>
+                            <div class="ml-3">
+                                <h3 class="text-sm font-medium text-red-800">{{.Title}}</h3>
+                                <div class="mt-2 text-sm text-red-700">
+                                    <p>{{.Description}}</p>
+                                </div>
+                                <div class="mt-4">
+                                    <div class="-mx-2 -my-1.5 flex">
+                                        <a href="{{.InvestigateURL}}" class="bg-red-100 px-2 py-1.5 rounded-md text-sm font-medium text-red-800 hover:bg-red-200">
+                                            Investigate
+                                        </a>
+                                        <button type="button" class="ml-3 bg-red-100 px-2 py-1.5 rounded-md text-sm font-medium text-red-800 hover:bg-red-200">
+                                            Dismiss
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {{end}}
+                </div>
+                {{end}}
+
+                <!-- Main Content -->
+                {{template "content" .}}
+            </main>
+        </div>
+    </div>
+
+    <!-- Real-time compliance monitoring -->
+    <div id="compliance-updates" class="hidden"></div>
+
+    <!-- Alpine.js for interactive components -->
+    <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    
+    <!-- Custom JavaScript -->
+    <script src="/static/js/app.js"></script>
+    
+    <!-- Compliance-specific JavaScript -->
+    <script>
+        // Real-time compliance monitoring
+        let complianceWs;
+        function connectComplianceWebSocket() {
+            complianceWs = new WebSocket(`ws://${location.host}/ws/compliance`);
+            
+            complianceWs.onmessage = function(event) {
+                const data = JSON.parse(event.data);
+                handleComplianceUpdate(data);
+            };
+            
+            complianceWs.onclose = function() {
+                // Reconnect after 5 seconds
+                setTimeout(connectComplianceWebSocket, 5000);
+            };
+        }
+        
+        function handleComplianceUpdate(data) {
+            switch (data.type) {
+                case 'risk_alert':
+                    showRiskAlert(data);
+                    break;
+                case 'new_case':
+                    updateCaseCount();
+                    break;
+                case 'trade_flag':
+                    highlightTrade(data.tradeId);
+                    break;
+            }
+        }
+        
+        function showRiskAlert(alert) {
+            // Create alert notification
+            const alertDiv = document.createElement('div');
+            alertDiv.className = 'fixed top-4 right-4 bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded z-50';
+            alertDiv.innerHTML = `
+                <div class="flex">
+                    <div class="flex-shrink-0">
+                        <i class="fas fa-exclamation-triangle text-red-400"></i>
+                    </div>
+                    <div class="ml-3">
+                        <p class="text-sm font-medium">New Risk Alert</p>
+                        <p class="text-sm">${alert.message}</p>
+                        <div class="mt-2">
+                            <a href="${alert.url}" class="text-sm bg-red-200 text-red-800 rounded px-2 py-1 hover:bg-red-300">
+                                Review
+                            </a>
+                        </div>
+                    </div>
+                    <div class="ml-auto pl-3">
+                        <button onclick="this.parentElement.parentElement.parentElement.remove()" class="text-red-400 hover:text-red-600">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(alertDiv);
+            
+            // Auto-remove after 10 seconds
+            setTimeout(() => {
+                if (alertDiv.parentElement) {
+                    alertDiv.remove();
+                }
+            }, 10000);
+        }
+        
+        function updateCaseCount() {
+            // Update pending case counters
+            fetch('/compliance/api/stats')
+                .then(response => response.json())
+                .then(data => {
+                    document.querySelectorAll('[data-case-count]').forEach(element => {
+                        element.textContent = data.pendingCases;
+                    });
+                });
+        }
+        
+        // Initialize DataTables for compliance tables
+        document.addEventListener('DOMContentLoaded', function() {
+            $('.compliance-table').DataTable({
+                responsive: true,
+                pageLength: 25,
+                order: [[0, 'desc']],
+                columnDefs: [{
+                    targets: 'no-sort',
+                    orderable: false
+                }],
+                language: {
+                    search: "Search compliance records:",
+                    lengthMenu: "Show _MENU_ records per page",
+                    info: "Showing _START_ to _END_ of _TOTAL_ records",
+                }
+            });
+            
+            // Connect to compliance WebSocket
+            connectComplianceWebSocket();
+        });
+        
+        // Compliance action helpers
+        function approveKYC(userId) {
+            if (confirm('Approve KYC for this user?')) {
+                fetch(`/compliance/api/kyc/${userId}/approve`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        location.reload();
+                    } else {
+                        alert('Error: ' + data.message);
+                    }
+                });
+            }
+        }
+        
+        function rejectKYC(userId) {
+            const reason = prompt('Reason for rejection:');
+            if (reason) {
+                fetch(`/compliance/api/kyc/${userId}/reject`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({reason: reason})
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        location.reload();
+                    } else {
+                        alert('Error: ' + data.message);
+                    }
+                });
+            }
+        }
+        
+        function flagTrade(tradeId) {
+            const reason = prompt('Reason for flagging this trade:');
+            if (reason) {
+                fetch(`/compliance/api/trades/${tradeId}/flag`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({reason: reason})
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        location.reload();
+                    } else {
+                        alert('Error: ' + data.message);
+                    }
+                });
+            }
+        }
+    </script>
+    
+    <!-- Page-specific scripts -->
+    {{template "scripts" .}}
+</body>
+</html>

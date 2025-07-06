@@ -1,0 +1,309 @@
+{{define "stat-card"}}
+<!-- Statistic card widget -->
+<div class="{{.WrapperClass | default "bg-white overflow-hidden shadow rounded-lg"}}">
+    <div class="p-5">
+        <div class="flex items-center">
+            <div class="flex-shrink-0">
+                {{if .Icon}}
+                <div class="{{.IconClass | default "w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center"}}">
+                    <i class="{{.Icon}} {{.IconColor | default "text-blue-600"}}"></i>
+                </div>
+                {{end}}
+            </div>
+            <div class="{{if .Icon}}ml-5{{end}} w-0 flex-1">
+                <dl>
+                    <dt class="text-sm font-medium text-gray-500 truncate">{{.Title}}</dt>
+                    <dd class="flex items-baseline">
+                        <div class="text-2xl font-semibold text-gray-900">{{.Value}}</div>
+                        {{if .Change}}
+                        <div class="ml-2 flex items-baseline text-sm font-semibold {{if gt .Change 0}}text-green-600{{else}}text-red-600{{end}}">
+                            <i class="fas fa-{{if gt .Change 0}}arrow-up{{else}}arrow-down{{end}} mr-1"></i>
+                            {{if gt .Change 0}}+{{end}}{{.Change}}{{if .ChangeUnit}}{{.ChangeUnit}}{{end}}
+                        </div>
+                        {{end}}
+                    </dd>
+                    {{if .Subtitle}}
+                    <dd class="text-sm text-gray-600 mt-1">{{.Subtitle}}</dd>
+                    {{end}}
+                </dl>
+            </div>
+        </div>
+    </div>
+    {{if .Link}}
+    <div class="bg-gray-50 px-5 py-3">
+        <div class="text-sm">
+            <a href="{{.Link}}" class="font-medium text-blue-700 hover:text-blue-900">
+                View details
+                <span class="ml-1"><i class="fas fa-arrow-right"></i></span>
+            </a>
+        </div>
+    </div>
+    {{end}}
+</div>
+{{end}}
+
+{{define "chart-widget"}}
+<!-- Chart widget -->
+<div class="{{.WrapperClass | default "bg-white shadow rounded-lg p-6"}}">
+    {{if .Title}}
+    <div class="flex items-center justify-between mb-4">
+        <h3 class="text-lg font-medium text-gray-900">{{.Title}}</h3>
+        {{if .Actions}}
+        <div class="flex space-x-2">
+            {{range .Actions}}
+            <button type="button" class="text-sm text-gray-500 hover:text-gray-700 {{.Class}}">
+                {{if .Icon}}<i class="{{.Icon}} mr-1"></i>{{end}}
+                {{.Label}}
+            </button>
+            {{end}}
+        </div>
+        {{end}}
+    </div>
+    {{end}}
+    
+    <div class="{{.ChartClass | default "h-64"}}">
+        <canvas id="{{.ChartID}}" data-chart-type="{{.ChartType}}" data-chart-data="{{.ChartData}}"></canvas>
+    </div>
+    
+    {{if .Footer}}
+    <div class="mt-4 text-sm text-gray-600">
+        {{.Footer}}
+    </div>
+    {{end}}
+</div>
+{{end}}
+
+{{define "alert-banner"}}
+<!-- Alert banner -->
+<div class="{{if eq .Type "error"}}bg-red-50 border-l-4 border-red-400{{else if eq .Type "warning"}}bg-yellow-50 border-l-4 border-yellow-400{{else if eq .Type "success"}}bg-green-50 border-l-4 border-green-400{{else}}bg-blue-50 border-l-4 border-blue-400{{end}} p-4 {{.WrapperClass}}">
+    <div class="flex">
+        <div class="flex-shrink-0">
+            {{if eq .Type "error"}}
+            <i class="fas fa-exclamation-circle text-red-400"></i>
+            {{else if eq .Type "warning"}}
+            <i class="fas fa-exclamation-triangle text-yellow-400"></i>
+            {{else if eq .Type "success"}}
+            <i class="fas fa-check-circle text-green-400"></i>
+            {{else}}
+            <i class="fas fa-info-circle text-blue-400"></i>
+            {{end}}
+        </div>
+        <div class="ml-3">
+            {{if .Title}}
+            <h3 class="text-sm font-medium {{if eq .Type "error"}}text-red-800{{else if eq .Type "warning"}}text-yellow-800{{else if eq .Type "success"}}text-green-800{{else}}text-blue-800{{end}}">
+                {{.Title}}
+            </h3>
+            {{end}}
+            <div class="{{if .Title}}mt-2{{end}} text-sm {{if eq .Type "error"}}text-red-700{{else if eq .Type "warning"}}text-yellow-700{{else if eq .Type "success"}}text-green-700{{else}}text-blue-700{{end}}">
+                {{.Message}}
+            </div>
+            {{if .Actions}}
+            <div class="mt-4">
+                <div class="-mx-2 -my-1.5 flex">
+                    {{range .Actions}}
+                    <a href="{{.URL}}" class="{{if eq $.Type "error"}}bg-red-100 text-red-800 hover:bg-red-200{{else if eq $.Type "warning"}}bg-yellow-100 text-yellow-800 hover:bg-yellow-200{{else if eq $.Type "success"}}bg-green-100 text-green-800 hover:bg-green-200{{else}}bg-blue-100 text-blue-800 hover:bg-blue-200{{end}} px-2 py-1.5 rounded-md text-sm font-medium mr-2">
+                        {{.Label}}
+                    </a>
+                    {{end}}
+                </div>
+            </div>
+            {{end}}
+        </div>
+        {{if .Dismissible}}
+        <div class="ml-auto pl-3">
+            <div class="-mx-1.5 -my-1.5">
+                <button type="button" onclick="this.closest('.p-4').remove()" class="inline-flex {{if eq .Type "error"}}text-red-400 hover:text-red-600{{else if eq .Type "warning"}}text-yellow-400 hover:text-yellow-600{{else if eq .Type "success"}}text-green-400 hover:text-green-600{{else}}text-blue-400 hover:text-blue-600{{end}} rounded-md p-1.5 focus:outline-none focus:ring-2 focus:ring-offset-2 {{if eq .Type "error"}}focus:ring-red-500{{else if eq .Type "warning"}}focus:ring-yellow-500{{else if eq .Type "success"}}focus:ring-green-500{{else}}focus:ring-blue-500{{end}}">
+                    <span class="sr-only">Dismiss</span>
+                    <i class="fas fa-times h-5 w-5"></i>
+                </button>
+            </div>
+        </div>
+        {{end}}
+    </div>
+</div>
+{{end}}
+
+{{define "progress-bar"}}
+<!-- Progress bar -->
+<div class="{{.WrapperClass}}">
+    {{if .Label}}
+    <div class="flex justify-between text-sm font-medium text-gray-700 mb-1">
+        <span>{{.Label}}</span>
+        <span>{{.Percentage}}%</span>
+    </div>
+    {{end}}
+    <div class="w-full bg-gray-200 rounded-full h-2">
+        <div class="{{.Color | default "bg-blue-600"}} h-2 rounded-full transition-all duration-300" style="width: {{.Percentage}}%"></div>
+    </div>
+</div>
+{{end}}
+
+{{define "loading-spinner"}}
+<!-- Loading spinner -->
+<div class="{{.WrapperClass | default "flex justify-center items-center"}}">
+    <div class="animate-spin rounded-full h-{{.Size | default "8"}} w-{{.Size | default "8"}} border-b-2 border-{{.Color | default "blue"}}-600"></div>
+    {{if .Text}}
+    <span class="ml-2 text-sm text-gray-600">{{.Text}}</span>
+    {{end}}
+</div>
+{{end}}
+
+{{define "empty-state"}}
+<!-- Empty state -->
+<div class="{{.WrapperClass | default "text-center py-12"}}">
+    {{if .Icon}}
+    <div class="mx-auto h-16 w-16 text-gray-400 mb-4">
+        <i class="{{.Icon}} text-4xl"></i>
+    </div>
+    {{end}}
+    <h3 class="mt-2 text-sm font-medium text-gray-900">{{.Title}}</h3>
+    {{if .Description}}
+    <p class="mt-1 text-sm text-gray-500">{{.Description}}</p>
+    {{end}}
+    {{if .Action}}
+    <div class="mt-6">
+        <a href="{{.Action.URL}}" class="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+            {{if .Action.Icon}}<i class="{{.Action.Icon}} mr-2"></i>{{end}}
+            {{.Action.Label}}
+        </a>
+    </div>
+    {{end}}
+</div>
+{{end}}
+
+{{define "notification-toast"}}
+<!-- Toast notification -->
+<div id="{{.ID}}" class="fixed top-4 right-4 max-w-sm w-full {{if eq .Type "error"}}bg-red-100 border border-red-400{{else if eq .Type "warning"}}bg-yellow-100 border border-yellow-400{{else if eq .Type "success"}}bg-green-100 border border-green-400{{else}}bg-blue-100 border border-blue-400{{end}} rounded-md shadow-lg z-50">
+    <div class="p-4">
+        <div class="flex">
+            <div class="flex-shrink-0">
+                {{if eq .Type "error"}}
+                <i class="fas fa-exclamation-circle text-red-400"></i>
+                {{else if eq .Type "warning"}}
+                <i class="fas fa-exclamation-triangle text-yellow-400"></i>
+                {{else if eq .Type "success"}}
+                <i class="fas fa-check-circle text-green-400"></i>
+                {{else}}
+                <i class="fas fa-info-circle text-blue-400"></i>
+                {{end}}
+            </div>
+            <div class="ml-3 w-0 flex-1">
+                {{if .Title}}
+                <p class="text-sm font-medium {{if eq .Type "error"}}text-red-800{{else if eq .Type "warning"}}text-yellow-800{{else if eq .Type "success"}}text-green-800{{else}}text-blue-800{{end}}">
+                    {{.Title}}
+                </p>
+                {{end}}
+                <p class="{{if .Title}}mt-1{{end}} text-sm {{if eq .Type "error"}}text-red-700{{else if eq .Type "warning"}}text-yellow-700{{else if eq .Type "success"}}text-green-700{{else}}text-blue-700{{end}}">
+                    {{.Message}}
+                </p>
+            </div>
+            <div class="ml-4 flex-shrink-0 flex">
+                <button onclick="document.getElementById('{{.ID}}').remove()" class="inline-flex {{if eq .Type "error"}}text-red-400 hover:text-red-600{{else if eq .Type "warning"}}text-yellow-400 hover:text-yellow-600{{else if eq .Type "success"}}text-green-400 hover:text-green-600{{else}}text-blue-400 hover:text-blue-600{{end}} focus:outline-none">
+                    <span class="sr-only">Close</span>
+                    <i class="fas fa-times h-5 w-5"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Auto-remove toast after delay
+{{if .AutoRemove}}
+setTimeout(function() {
+    const toast = document.getElementById('{{.ID}}');
+    if (toast) {
+        toast.remove();
+    }
+}, {{.AutoRemove | default 5000}});
+{{end}}
+</script>
+{{end}}
+
+{{define "breadcrumb"}}
+<!-- Breadcrumb navigation -->
+<nav class="flex {{.WrapperClass}}" aria-label="Breadcrumb">
+    <ol class="flex items-center space-x-4">
+        {{range $index, $item := .Items}}
+        <li {{if eq $index 0}}class="flex"{{end}}>
+            {{if ne $index 0}}
+            <div class="flex items-center">
+                <i class="flex-shrink-0 h-5 w-5 text-gray-400 fas fa-chevron-right"></i>
+            </div>
+            {{end}}
+            {{if .URL}}
+            <a href="{{.URL}}" class="{{if eq $index 0}}text-gray-400 hover:text-gray-500{{else}}ml-4 text-sm font-medium text-gray-500 hover:text-gray-700{{end}}">
+                {{if and .Icon (eq $index 0)}}
+                <i class="{{.Icon}} flex-shrink-0 h-5 w-5"></i>
+                <span class="sr-only">{{.Label}}</span>
+                {{else}}
+                {{.Label}}
+                {{end}}
+            </a>
+            {{else}}
+            <span class="{{if eq $index 0}}text-gray-400{{else}}ml-4 text-sm font-medium text-gray-500{{end}}" aria-current="page">
+                {{.Label}}
+            </span>
+            {{end}}
+        </li>
+        {{end}}
+    </ol>
+</nav>
+{{end}}
+
+{{define "modal"}}
+<!-- Modal dialog -->
+<div id="{{.ID}}" class="hidden fixed inset-0 z-50 overflow-y-auto">
+    <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+        <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" onclick="closeModal('{{.ID}}')"></div>
+
+        <span class="hidden sm:inline-block sm:align-middle sm:h-screen">&#8203;</span>
+
+        <div class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle {{.Size | default "sm:max-w-lg"}} sm:w-full">
+            {{if .Title}}
+            <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+                <div class="sm:flex sm:items-start">
+                    {{if .Icon}}
+                    <div class="mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full {{.IconBg | default "bg-blue-100"}} sm:mx-0 sm:h-10 sm:w-10">
+                        <i class="{{.Icon}} {{.IconColor | default "text-blue-600"}}"></i>
+                    </div>
+                    {{end}}
+                    <div class="{{if .Icon}}mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left{{end}}">
+                        <h3 class="text-lg leading-6 font-medium text-gray-900">{{.Title}}</h3>
+                        {{if .Description}}
+                        <div class="mt-2">
+                            <p class="text-sm text-gray-500">{{.Description}}</p>
+                        </div>
+                        {{end}}
+                    </div>
+                </div>
+            </div>
+            {{end}}
+            
+            <div class="{{if .Title}}px-4 pb-4 sm:px-6 sm:pb-4{{else}}p-6{{end}}">
+                {{.Content}}
+            </div>
+
+            {{if .Actions}}
+            <div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
+                {{range .Actions}}
+                <button type="{{.Type | default "button"}}" onclick="{{.OnClick}}" class="{{if .Primary}}w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-blue-600 text-base font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:ml-3 sm:w-auto sm:text-sm{{else if .Danger}}w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-red-600 text-base font-medium text-white hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 sm:ml-3 sm:w-auto sm:text-sm{{else}}mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm{{end}}">
+                    {{.Label}}
+                </button>
+                {{end}}
+            </div>
+            {{end}}
+        </div>
+    </div>
+</div>
+
+<script>
+function openModal(id) {
+    document.getElementById(id).classList.remove('hidden');
+}
+
+function closeModal(id) {
+    document.getElementById(id).classList.add('hidden');
+}
+</script>
+{{end}}
