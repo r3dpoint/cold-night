@@ -10,7 +10,6 @@ import (
 	"golang.org/x/crypto/bcrypt"
 
 	"securities-marketplace/domains/users"
-	"securities-marketplace/domains/shared/web"
 )
 
 // AuthHandler handles authentication requests
@@ -27,6 +26,7 @@ type UserService interface {
 	GetByID(userID string) (*users.UserAggregate, error)
 	Save(user *users.UserAggregate) error
 }
+
 
 // NewAuthHandler creates a new authentication handler
 func NewAuthHandler(jwtManager *JWTManager, sessionStore SessionStore, userService UserService, rbac *RBAC) *AuthHandler {
@@ -61,13 +61,9 @@ func (h *AuthHandler) ShowLoginForm(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	data := map[string]interface{}{
-		"Title": "Login",
-		"Error": r.URL.Query().Get("error"),
-		"Message": r.URL.Query().Get("message"),
-	}
-
-	web.RenderTemplate(w, "login.html", data)
+	// TODO: Implement template rendering with login data
+	w.Header().Set("Content-Type", "text/html")
+	w.Write([]byte("<h1>Login</h1>"))
 }
 
 // HandleLogin handles form-based login
@@ -111,12 +107,12 @@ func (h *AuthHandler) HandleLogin(w http.ResponseWriter, r *http.Request) {
 func (h *AuthHandler) HandleAPILogin(w http.ResponseWriter, r *http.Request) {
 	var loginReq LoginRequest
 	if err := json.NewDecoder(r.Body).Decode(&loginReq); err != nil {
-		web.WriteJSONError(w, "Invalid JSON", http.StatusBadRequest)
+		http.Error(w, "Invalid JSON", http.StatusBadRequest)
 		return
 	}
 
 	if err := loginReq.Validate(); err != nil {
-		web.WriteJSONError(w, err.Error(), http.StatusBadRequest)
+		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
@@ -128,11 +124,12 @@ func (h *AuthHandler) HandleAPILogin(w http.ResponseWriter, r *http.Request) {
 		r.UserAgent(),
 	)
 	if err != nil {
-		web.WriteJSONError(w, err.Error(), http.StatusUnauthorized)
+		http.Error(w, err.Error(), http.StatusUnauthorized)
 		return
 	}
 
-	web.WriteJSON(w, loginResponse, http.StatusOK)
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(loginResponse)
 }
 
 // HandleLogout handles logout requests
@@ -180,40 +177,42 @@ func (h *AuthHandler) HandleAPILogout(w http.ResponseWriter, r *http.Request) {
 		"success": true,
 		"message": "Logged out successfully",
 	}
-	web.WriteJSON(w, response, http.StatusOK)
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(response)
 }
 
 // HandleAPIRefreshToken handles token refresh
 func (h *AuthHandler) HandleAPIRefreshToken(w http.ResponseWriter, r *http.Request) {
 	token, err := h.extractToken(r)
 	if err != nil {
-		web.WriteJSONError(w, "Token required", http.StatusUnauthorized)
+		http.Error(w, "Token required", http.StatusUnauthorized)
 		return
 	}
 
 	newToken, err := h.jwtManager.RefreshToken(token)
 	if err != nil {
-		web.WriteJSONError(w, "Token refresh failed: "+err.Error(), http.StatusUnauthorized)
+		http.Error(w, "Token refresh failed: "+err.Error(), http.StatusUnauthorized)
 		return
 	}
 
 	response := map[string]interface{}{
 		"token": newToken,
 	}
-	web.WriteJSON(w, response, http.StatusOK)
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(response)
 }
 
 // HandleAPIGetProfile returns the current user's profile
 func (h *AuthHandler) HandleAPIGetProfile(w http.ResponseWriter, r *http.Request) {
 	userCtx := GetUserFromContext(r.Context())
 	if userCtx == nil {
-		web.WriteJSONError(w, "User not authenticated", http.StatusUnauthorized)
+		http.Error(w, "User not authenticated", http.StatusUnauthorized)
 		return
 	}
 
 	user, err := h.userService.GetByID(userCtx.UserID)
 	if err != nil {
-		web.WriteJSONError(w, "User not found", http.StatusNotFound)
+		http.Error(w, "User not found", http.StatusNotFound)
 		return
 	}
 
@@ -240,7 +239,8 @@ func (h *AuthHandler) HandleAPIGetProfile(w http.ResponseWriter, r *http.Request
 		},
 	}
 
-	web.WriteJSON(w, profile, http.StatusOK)
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(profile)
 }
 
 // processLogin handles the core login logic
@@ -252,7 +252,7 @@ func (h *AuthHandler) processLogin(email, password string, rememberMe bool, ipAd
 	}
 
 	// Check if user is suspended
-	if user.Status == users.UserSuspended {
+	if user.Status == users.UserStatusSuspended {
 		return nil, errors.New("account is suspended")
 	}
 

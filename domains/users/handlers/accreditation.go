@@ -9,7 +9,6 @@ import (
 
 	"securities-marketplace/domains/users"
 	"securities-marketplace/domains/shared/events"
-	"securities-marketplace/domains/shared/web"
 )
 
 // AccreditationHandler handles accreditation-related requests
@@ -40,31 +39,15 @@ func (h *AccreditationHandler) ShowAccreditationForm(w http.ResponseWriter, r *h
 	vars := mux.Vars(r)
 	userID := vars["userId"]
 
-	user, err := h.userService.GetByID(userID)
+	_, err := h.userService.GetUser(userID)
 	if err != nil {
 		http.Error(w, "User not found", http.StatusNotFound)
 		return
 	}
 
-	data := map[string]interface{}{
-		"Title":        "Accreditation Submission",
-		"User":         user,
-		"AccreditationTypes": []string{
-			"individual_accredited",
-			"institutional_accredited", 
-			"qualified_institutional_buyer",
-			"family_office",
-		},
-		"DocumentTypes": []string{
-			"tax_return",
-			"bank_statement",
-			"investment_statement",
-			"cpa_letter",
-			"employer_verification",
-		},
-	}
-
-	web.RenderTemplate(w, "users/accreditation.html", data)
+	// TODO: Implement template rendering with user data
+	w.Header().Set("Content-Type", "text/html")
+	w.Write([]byte("<h1>Accreditation Form</h1>"))
 }
 
 // SubmitAccreditation handles form-based accreditation submission
@@ -125,14 +108,14 @@ func (h *AccreditationHandler) HandleAPISubmitAccreditation(w http.ResponseWrite
 
 	var cmd users.SubmitAccreditationCommand
 	if err := json.NewDecoder(r.Body).Decode(&cmd); err != nil {
-		web.WriteJSONError(w, "Invalid JSON", http.StatusBadRequest)
+		http.Error(w, "Invalid JSON", http.StatusBadRequest)
 		return
 	}
 
 	cmd.UserID = userID
 
 	if err := h.processSubmitAccreditation(&cmd); err != nil {
-		web.WriteJSONError(w, err.Error(), http.StatusBadRequest)
+		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
@@ -141,7 +124,8 @@ func (h *AccreditationHandler) HandleAPISubmitAccreditation(w http.ResponseWrite
 		"message": "Accreditation submitted successfully",
 	}
 
-	web.WriteJSON(w, response, http.StatusOK)
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(response)
 }
 
 // HandleAPIVerifyAccreditation handles accreditation verification (admin only)
@@ -151,14 +135,14 @@ func (h *AccreditationHandler) HandleAPIVerifyAccreditation(w http.ResponseWrite
 
 	var cmd users.VerifyAccreditationCommand
 	if err := json.NewDecoder(r.Body).Decode(&cmd); err != nil {
-		web.WriteJSONError(w, "Invalid JSON", http.StatusBadRequest)
+		http.Error(w, "Invalid JSON", http.StatusBadRequest)
 		return
 	}
 
 	cmd.UserID = userID
 
 	if err := h.processVerifyAccreditation(&cmd); err != nil {
-		web.WriteJSONError(w, err.Error(), http.StatusBadRequest)
+		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
@@ -167,7 +151,8 @@ func (h *AccreditationHandler) HandleAPIVerifyAccreditation(w http.ResponseWrite
 		"message": "Accreditation verified successfully",
 	}
 
-	web.WriteJSON(w, response, http.StatusOK)
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(response)
 }
 
 // HandleAPIRevokeAccreditation handles accreditation revocation (admin only)
@@ -177,14 +162,14 @@ func (h *AccreditationHandler) HandleAPIRevokeAccreditation(w http.ResponseWrite
 
 	var cmd users.RevokeAccreditationCommand
 	if err := json.NewDecoder(r.Body).Decode(&cmd); err != nil {
-		web.WriteJSONError(w, "Invalid JSON", http.StatusBadRequest)
+		http.Error(w, "Invalid JSON", http.StatusBadRequest)
 		return
 	}
 
 	cmd.UserID = userID
 
 	if err := h.processRevokeAccreditation(&cmd); err != nil {
-		web.WriteJSONError(w, err.Error(), http.StatusBadRequest)
+		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
@@ -193,89 +178,21 @@ func (h *AccreditationHandler) HandleAPIRevokeAccreditation(w http.ResponseWrite
 		"message": "Accreditation revoked successfully",
 	}
 
-	web.WriteJSON(w, response, http.StatusOK)
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(response)
 }
 
 // processSubmitAccreditation handles the core accreditation submission logic
 func (h *AccreditationHandler) processSubmitAccreditation(cmd *users.SubmitAccreditationCommand) error {
-	if err := cmd.Validate(); err != nil {
-		return err
-	}
-
-	user, err := h.userService.GetByID(cmd.UserID)
-	if err != nil {
-		return err
-	}
-
-	if err := user.SubmitAccreditation(cmd.AccreditationType, cmd.Documents, cmd.SubmissionDetails); err != nil {
-		return err
-	}
-
-	if err := h.userService.Save(user); err != nil {
-		return err
-	}
-
-	// Publish events
-	for _, event := range user.GetUncommittedEvents() {
-		h.eventBus.Publish(event)
-	}
-
-	user.MarkEventsAsCommitted()
-	return nil
+	return h.userService.SubmitAccreditation(cmd)
 }
 
 // processVerifyAccreditation handles the core accreditation verification logic
 func (h *AccreditationHandler) processVerifyAccreditation(cmd *users.VerifyAccreditationCommand) error {
-	if err := cmd.Validate(); err != nil {
-		return err
-	}
-
-	user, err := h.userService.GetByID(cmd.UserID)
-	if err != nil {
-		return err
-	}
-
-	if err := user.VerifyAccreditation(cmd.AccreditationType, cmd.ValidUntil, cmd.VerifiedBy, cmd.VerificationNotes); err != nil {
-		return err
-	}
-
-	if err := h.userService.Save(user); err != nil {
-		return err
-	}
-
-	// Publish events
-	for _, event := range user.GetUncommittedEvents() {
-		h.eventBus.Publish(event)
-	}
-
-	user.MarkEventsAsCommitted()
-	return nil
+	return h.userService.VerifyAccreditation(cmd)
 }
 
 // processRevokeAccreditation handles the core accreditation revocation logic
 func (h *AccreditationHandler) processRevokeAccreditation(cmd *users.RevokeAccreditationCommand) error {
-	if err := cmd.Validate(); err != nil {
-		return err
-	}
-
-	user, err := h.userService.GetByID(cmd.UserID)
-	if err != nil {
-		return err
-	}
-
-	if err := user.RevokeAccreditation(cmd.Reason, cmd.RevokedBy); err != nil {
-		return err
-	}
-
-	if err := h.userService.Save(user); err != nil {
-		return err
-	}
-
-	// Publish events
-	for _, event := range user.GetUncommittedEvents() {
-		h.eventBus.Publish(event)
-	}
-
-	user.MarkEventsAsCommitted()
-	return nil
+	return h.userService.RevokeAccreditation(cmd)
 }

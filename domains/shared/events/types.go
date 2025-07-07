@@ -85,6 +85,7 @@ type EventStore interface {
 	GetAllEvents(fromEventNumber int64, limit int) ([]*Event, error)
 	GetSnapshot(aggregateID string) (*Snapshot, error)
 	SaveSnapshot(snapshot *Snapshot) error
+	CreateEventFromDomain(domainEvent DomainEvent, userID, correlationID string, causationID *string) (*Event, error)
 }
 
 // EventBus interface for publishing and subscribing to events

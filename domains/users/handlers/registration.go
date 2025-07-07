@@ -6,11 +6,9 @@ import (
 	"time"
 
 	"github.com/gorilla/mux"
-	"golang.org/x/crypto/bcrypt"
 
 	"securities-marketplace/domains/users"
 	"securities-marketplace/domains/shared/events"
-	"securities-marketplace/domains/shared/web"
 )
 
 // RegistrationHandler handles user registration requests
@@ -36,17 +34,9 @@ func (h *RegistrationHandler) RegisterRoutes(router *mux.Router) {
 
 // ShowRegistrationForm displays the registration form
 func (h *RegistrationHandler) ShowRegistrationForm(w http.ResponseWriter, r *http.Request) {
-	data := map[string]interface{}{
-		"Title": "User Registration",
-		"AccreditationTypes": []string{
-			"individual_accredited",
-			"institutional_accredited", 
-			"qualified_institutional_buyer",
-			"family_office",
-		},
-	}
-	
-	web.RenderTemplate(w, "users/registration.html", data)
+	// TODO: Implement template rendering with registration data
+	w.Header().Set("Content-Type", "text/html")
+	_, _ = w.Write([]byte("<h1>Registration</h1>"))
 }
 
 // HandleRegistration handles form-based user registration
@@ -71,17 +61,9 @@ func (h *RegistrationHandler) HandleRegistration(w http.ResponseWriter, r *http.
 	}
 
 	if err := h.processRegistration(cmd); err != nil {
-		data := map[string]interface{}{
-			"Title": "User Registration",
-			"Error": err.Error(),
-			"AccreditationTypes": []string{
-				"individual_accredited",
-				"institutional_accredited", 
-				"qualified_institutional_buyer",
-				"family_office",
-			},
-		}
-		web.RenderTemplate(w, "users/registration.html", data)
+		// TODO: Implement template rendering with error data
+	w.Header().Set("Content-Type", "text/html")
+	_, _ = w.Write([]byte("<h1>Registration</h1>"))
 		return
 	}
 
@@ -93,12 +75,12 @@ func (h *RegistrationHandler) HandleRegistration(w http.ResponseWriter, r *http.
 func (h *RegistrationHandler) HandleAPIRegistration(w http.ResponseWriter, r *http.Request) {
 	var cmd users.RegisterUserCommand
 	if err := json.NewDecoder(r.Body).Decode(&cmd); err != nil {
-		web.WriteJSONError(w, "Invalid JSON", http.StatusBadRequest)
+		http.Error(w, "Invalid JSON", http.StatusBadRequest)
 		return
 	}
 
 	if err := h.processRegistration(&cmd); err != nil {
-		web.WriteJSONError(w, err.Error(), http.StatusBadRequest)
+		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
@@ -108,58 +90,14 @@ func (h *RegistrationHandler) HandleAPIRegistration(w http.ResponseWriter, r *ht
 		"userId":  cmd.UserID,
 	}
 
-	web.WriteJSON(w, response, http.StatusCreated)
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(response)
 }
 
 // processRegistration handles the core registration logic
 func (h *RegistrationHandler) processRegistration(cmd *users.RegisterUserCommand) error {
-	// Validate command
-	if err := cmd.Validate(); err != nil {
-		return err
-	}
-
-	// Hash password
-	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(cmd.Password), bcrypt.DefaultCost)
-	if err != nil {
-		return err
-	}
-
-	// Generate user ID if not provided
-	if cmd.UserID == "" {
-		cmd.UserID = generateUserID()
-	}
-
-	// Create user aggregate
-	user := users.NewUserAggregate(cmd.UserID)
-	
-	// Register user
-	err = user.Register(
-		cmd.Email,
-		cmd.FirstName,
-		cmd.LastName,
-		string(hashedPassword),
-		cmd.AccreditationType,
-		cmd.AccreditationDetails,
-	)
-	if err != nil {
-		return err
-	}
-
-	// Save user
-	if err := h.userService.Save(user); err != nil {
-		return err
-	}
-
-	// Publish events
-	for _, event := range user.GetUncommittedEvents() {
-		if err := h.eventBus.Publish(event); err != nil {
-			// Log error but don't fail the request
-			// Events will be republished on next aggregate load
-		}
-	}
-
-	user.MarkEventsAsCommitted()
-	return nil
+	_, err := h.userService.RegisterUser(cmd)
+	return err
 }
 
 // generateUserID generates a unique user ID

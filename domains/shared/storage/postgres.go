@@ -15,7 +15,7 @@ func NewPostgresConnection() (*sql.DB, error) {
 	databaseURL := os.Getenv("DATABASE_URL")
 	if databaseURL == "" {
 		// Default connection string for development
-		databaseURL = "postgres://securities_user:securities_pass@localhost:5432/securities?sslmode=disable"
+		databaseURL = "postgres://postgres:postgres@localhost:5432/postgres?sslmode=disable"
 	}
 
 	// Open database connection

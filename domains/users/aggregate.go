@@ -11,29 +11,29 @@ import (
 type AccreditationStatus string
 
 const (
-	AccreditationPending  AccreditationStatus = "pending"
-	AccreditationVerified AccreditationStatus = "verified"
-	AccreditationRevoked  AccreditationStatus = "revoked"
-	AccreditationExpired  AccreditationStatus = "expired"
+	AccreditationStatusPending  AccreditationStatus = "pending"
+	AccreditationStatusVerified AccreditationStatus = "verified"
+	AccreditationStatusRevoked  AccreditationStatus = "revoked"
+	AccreditationStatusExpired  AccreditationStatus = "expired"
 )
 
 // ComplianceStatus represents the user's compliance status
 type ComplianceStatus string
 
 const (
-	ComplianceClear     ComplianceStatus = "clear"
-	CompliancePending   ComplianceStatus = "pending"
-	ComplianceReview    ComplianceStatus = "review"
-	ComplianceBlocked   ComplianceStatus = "blocked"
+	ComplianceStatusClear     ComplianceStatus = "clear"
+	ComplianceStatusPending   ComplianceStatus = "pending"
+	ComplianceStatusReview    ComplianceStatus = "review"
+	ComplianceStatusBlocked   ComplianceStatus = "blocked"
 )
 
 // UserStatus represents the user's account status
 type UserStatus string
 
 const (
-	UserActive    UserStatus = "active"
-	UserSuspended UserStatus = "suspended"
-	UserInactive  UserStatus = "inactive"
+	UserStatusActive    UserStatus = "active"
+	UserStatusSuspended UserStatus = "suspended"
+	UserStatusInactive  UserStatus = "inactive"
 )
 
 // DocumentInfo represents an uploaded document
@@ -101,17 +101,17 @@ type UserAggregate struct {
 func NewUserAggregate(userID string) *UserAggregate {
 	return &UserAggregate{
 		AggregateRoot: events.NewAggregateRoot(userID, "User"),
-		Status:        UserActive,
+		Status:        "", // Will be set when registered
 		Accreditation: AccreditationInfo{
-			Status:    AccreditationPending,
+			Status:    "", // Will be set when accreditation is submitted
 			Documents: make([]DocumentInfo, 0),
 			Details:   make(map[string]string),
 		},
 		Compliance: ComplianceInfo{
-			OverallStatus:   CompliancePending,
-			KYCStatus:      CompliancePending,
-			AMLStatus:      CompliancePending,
-			SanctionsStatus: CompliancePending,
+			OverallStatus:   ComplianceStatusPending,
+			KYCStatus:      ComplianceStatusPending,
+			AMLStatus:      ComplianceStatusPending,
+			SanctionsStatus: ComplianceStatusPending,
 			RiskScore:      0,
 			WatchlistStatus: "none",
 		},
@@ -124,6 +124,20 @@ func (u *UserAggregate) Register(email, firstName, lastName, passwordHash, accre
 		return fmt.Errorf("user already exists")
 	}
 
+	// Validate required fields
+	if email == "" {
+		return fmt.Errorf("email is required")
+	}
+	if firstName == "" {
+		return fmt.Errorf("first name is required")
+	}
+	if lastName == "" {
+		return fmt.Errorf("last name is required")
+	}
+	if len(passwordHash) < 8 {
+		return fmt.Errorf("password must be at least 8 characters")
+	}
+
 	event := NewUserRegistered(u.ID, email, firstName, lastName, passwordHash, accreditationType, accreditationDetails)
 	u.AddEvent(event)
 	return u.ApplyEvent(event)
@@ -131,7 +145,7 @@ func (u *UserAggregate) Register(email, firstName, lastName, passwordHash, accre
 
 // SubmitAccreditation submits accreditation documents
 func (u *UserAggregate) SubmitAccreditation(accreditationType string, documents []DocumentInfo, submissionDetails map[string]string) error {
-	if u.Status == UserSuspended {
+	if u.Status == UserStatusSuspended {
 		return fmt.Errorf("cannot submit accreditation for suspended user")
 	}
 
@@ -142,7 +156,10 @@ func (u *UserAggregate) SubmitAccreditation(accreditationType string, documents 
 
 // VerifyAccreditation marks the user's accreditation as verified
 func (u *UserAggregate) VerifyAccreditation(accreditationType string, validUntil time.Time, verifiedBy, verificationNotes string) error {
-	if u.Accreditation.Status != AccreditationPending {
+	if u.Accreditation.Status == "" {
+		return fmt.Errorf("no accreditation submitted to verify")
+	}
+	if u.Accreditation.Status != AccreditationStatusPending {
 		return fmt.Errorf("accreditation is not in pending status")
 	}
 
@@ -153,7 +170,7 @@ func (u *UserAggregate) VerifyAccreditation(accreditationType string, validUntil
 
 // RevokeAccreditation revokes the user's accreditation
 func (u *UserAggregate) RevokeAccreditation(reason, revokedBy string) error {
-	if u.Accreditation.Status != AccreditationVerified {
+	if u.Accreditation.Status != AccreditationStatusVerified {
 		return fmt.Errorf("accreditation is not verified")
 	}
 
@@ -171,7 +188,7 @@ func (u *UserAggregate) PerformComplianceCheck(checkType, status string, results
 
 // Suspend suspends the user account
 func (u *UserAggregate) Suspend(reason, suspendedBy string, duration *time.Time) error {
-	if u.Status == UserSuspended {
+	if u.Status == UserStatusSuspended {
 		return fmt.Errorf("user is already suspended")
 	}
 
@@ -182,7 +199,7 @@ func (u *UserAggregate) Suspend(reason, suspendedBy string, duration *time.Time)
 
 // Reinstate reinstates a suspended user
 func (u *UserAggregate) Reinstate(reinstatedBy, reason string) error {
-	if u.Status != UserSuspended {
+	if u.Status != UserStatusSuspended {
 		return fmt.Errorf("user is not suspended")
 	}
 
@@ -193,7 +210,7 @@ func (u *UserAggregate) Reinstate(reinstatedBy, reason string) error {
 
 // UpdateProfile updates user profile information
 func (u *UserAggregate) UpdateProfile(updatedFields map[string]interface{}, updatedBy string) error {
-	if u.Status == UserSuspended {
+	if u.Status == UserStatusSuspended {
 		return fmt.Errorf("cannot update profile for suspended user")
 	}
 
@@ -245,11 +262,14 @@ func (u *UserAggregate) applyUserRegistered(event *UserRegistered) error {
 	u.LastName = event.LastName
 	u.PasswordHash = event.PasswordHash
 	u.CreatedAt = event.Timestamp
-	u.Status = UserActive
+	u.Status = UserStatusActive
 	
-	u.Accreditation.Type = event.AccreditationType
-	u.Accreditation.Details = event.AccreditationDetails
-	u.Accreditation.Status = AccreditationPending
+	// Only set up accreditation if provided
+	if event.AccreditationType != "" || len(event.AccreditationDetails) > 0 {
+		u.Accreditation.Type = event.AccreditationType
+		u.Accreditation.Details = event.AccreditationDetails
+		u.Accreditation.Status = AccreditationStatusPending
+	}
 	
 	u.IncrementVersion()
 	return nil
@@ -259,14 +279,14 @@ func (u *UserAggregate) applyAccreditationSubmitted(event *AccreditationSubmitte
 	u.Accreditation.Type = event.AccreditationType
 	u.Accreditation.Documents = event.Documents
 	u.Accreditation.Details = event.SubmissionDetails
-	u.Accreditation.Status = AccreditationPending
+	u.Accreditation.Status = AccreditationStatusPending
 	
 	u.IncrementVersion()
 	return nil
 }
 
 func (u *UserAggregate) applyAccreditationVerified(event *AccreditationVerified) error {
-	u.Accreditation.Status = AccreditationVerified
+	u.Accreditation.Status = AccreditationStatusVerified
 	u.Accreditation.ValidUntil = &event.ValidUntil
 	u.Accreditation.VerifiedBy = event.VerifiedBy
 	u.Accreditation.VerifiedAt = &event.Timestamp
@@ -277,7 +297,7 @@ func (u *UserAggregate) applyAccreditationVerified(event *AccreditationVerified)
 }
 
 func (u *UserAggregate) applyAccreditationRevoked(event *AccreditationRevoked) error {
-	u.Accreditation.Status = AccreditationRevoked
+	u.Accreditation.Status = AccreditationStatusRevoked
 	u.Accreditation.ValidUntil = nil
 	u.Accreditation.Notes = event.Reason
 	
@@ -312,7 +332,7 @@ func (u *UserAggregate) applyComplianceCheckPerformed(event *ComplianceCheckPerf
 }
 
 func (u *UserAggregate) applyUserSuspended(event *UserSuspended) error {
-	u.Status = UserSuspended
+	u.Status = UserStatusSuspended
 	u.SuspendedAt = &event.Timestamp
 	u.SuspensionUntil = event.Duration
 	u.SuspensionReason = event.Reason
@@ -322,7 +342,7 @@ func (u *UserAggregate) applyUserSuspended(event *UserSuspended) error {
 }
 
 func (u *UserAggregate) applyUserReinstated(event *UserReinstated) error {
-	u.Status = UserActive
+	u.Status = UserStatusActive
 	u.SuspendedAt = nil
 	u.SuspensionUntil = nil
 	u.SuspensionReason = ""
@@ -356,26 +376,26 @@ func (u *UserAggregate) applyUserProfileUpdated(event *UserProfileUpdated) error
 // Helper methods
 
 func (u *UserAggregate) updateOverallComplianceStatus() {
-	if u.Compliance.KYCStatus == ComplianceClear && 
-	   u.Compliance.AMLStatus == ComplianceClear && 
-	   u.Compliance.SanctionsStatus == ComplianceClear {
-		u.Compliance.OverallStatus = ComplianceClear
-	} else if u.Compliance.KYCStatus == ComplianceBlocked || 
-	          u.Compliance.AMLStatus == ComplianceBlocked || 
-	          u.Compliance.SanctionsStatus == ComplianceBlocked {
-		u.Compliance.OverallStatus = ComplianceBlocked
-	} else if u.Compliance.KYCStatus == ComplianceReview || 
-	          u.Compliance.AMLStatus == ComplianceReview || 
-	          u.Compliance.SanctionsStatus == ComplianceReview {
-		u.Compliance.OverallStatus = ComplianceReview
+	if u.Compliance.KYCStatus == ComplianceStatusClear && 
+	   u.Compliance.AMLStatus == ComplianceStatusClear && 
+	   u.Compliance.SanctionsStatus == ComplianceStatusClear {
+		u.Compliance.OverallStatus = ComplianceStatusClear
+	} else if u.Compliance.KYCStatus == ComplianceStatusBlocked || 
+	          u.Compliance.AMLStatus == ComplianceStatusBlocked || 
+	          u.Compliance.SanctionsStatus == ComplianceStatusBlocked {
+		u.Compliance.OverallStatus = ComplianceStatusBlocked
+	} else if u.Compliance.KYCStatus == ComplianceStatusReview || 
+	          u.Compliance.AMLStatus == ComplianceStatusReview || 
+	          u.Compliance.SanctionsStatus == ComplianceStatusReview {
+		u.Compliance.OverallStatus = ComplianceStatusReview
 	} else {
-		u.Compliance.OverallStatus = CompliancePending
+		u.Compliance.OverallStatus = ComplianceStatusPending
 	}
 }
 
 // IsAccredited returns true if the user is currently accredited
 func (u *UserAggregate) IsAccredited() bool {
-	if u.Accreditation.Status != AccreditationVerified {
+	if u.Accreditation.Status != AccreditationStatusVerified {
 		return false
 	}
 	
@@ -388,10 +408,10 @@ func (u *UserAggregate) IsAccredited() bool {
 
 // IsCompliant returns true if the user is compliant for trading
 func (u *UserAggregate) IsCompliant() bool {
-	return u.Compliance.OverallStatus == ComplianceClear
+	return u.Compliance.OverallStatus == ComplianceStatusClear
 }
 
 // CanTrade returns true if the user can participate in trading
 func (u *UserAggregate) CanTrade() bool {
-	return u.Status == UserActive && u.IsAccredited() && u.IsCompliant()
+	return u.Status == UserStatusActive && u.IsAccredited() && u.IsCompliant()
 }

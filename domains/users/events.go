@@ -60,14 +60,7 @@ type AccreditationSubmitted struct {
 	SubmissionDetails map[string]string `json:"submissionDetails"`
 }
 
-type DocumentInfo struct {
-	DocumentID   string    `json:"documentId"`
-	DocumentType string    `json:"documentType"`
-	FileName     string    `json:"fileName"`
-	FileSize     int64     `json:"fileSize"`
-	ContentHash  string    `json:"contentHash"`
-	UploadedAt   time.Time `json:"uploadedAt"`
-}
+// DocumentInfo is defined in aggregate.go to avoid duplication
 
 func NewAccreditationSubmitted(userID, accreditationType string, documents []DocumentInfo, submissionDetails map[string]string) *AccreditationSubmitted {
 	return &AccreditationSubmitted{

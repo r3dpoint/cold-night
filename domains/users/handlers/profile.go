@@ -8,7 +8,6 @@ import (
 
 	"securities-marketplace/domains/users"
 	"securities-marketplace/domains/shared/events"
-	"securities-marketplace/domains/shared/web"
 )
 
 // ProfileHandler handles user profile requests
@@ -40,18 +39,15 @@ func (h *ProfileHandler) ShowProfile(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	userID := vars["userId"]
 
-	user, err := h.userService.GetByID(userID)
+	_, err := h.userService.GetUser(userID)
 	if err != nil {
 		http.Error(w, "User not found", http.StatusNotFound)
 		return
 	}
 
-	data := map[string]interface{}{
-		"Title": "User Profile",
-		"User":  user,
-	}
-
-	web.RenderTemplate(w, "users/profile.html", data)
+	// TODO: Implement template rendering with user data
+	w.Header().Set("Content-Type", "text/html")
+	w.Write([]byte("<h1>User Profile</h1>"))
 }
 
 // UpdateProfile handles form-based profile updates
@@ -96,9 +92,9 @@ func (h *ProfileHandler) HandleAPIGetProfile(w http.ResponseWriter, r *http.Requ
 	vars := mux.Vars(r)
 	userID := vars["userId"]
 
-	user, err := h.userService.GetByID(userID)
+	user, err := h.userService.GetUser(userID)
 	if err != nil {
-		web.WriteJSONError(w, "User not found", http.StatusNotFound)
+		http.Error(w, "User not found", http.StatusNotFound)
 		return
 	}
 
@@ -132,7 +128,8 @@ func (h *ProfileHandler) HandleAPIGetProfile(w http.ResponseWriter, r *http.Requ
 		},
 	}
 
-	web.WriteJSON(w, profileData, http.StatusOK)
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(profileData)
 }
 
 // HandleAPIUpdateProfile handles JSON API profile updates
@@ -142,7 +139,7 @@ func (h *ProfileHandler) HandleAPIUpdateProfile(w http.ResponseWriter, r *http.R
 
 	var cmd users.UpdateUserProfileCommand
 	if err := json.NewDecoder(r.Body).Decode(&cmd); err != nil {
-		web.WriteJSONError(w, "Invalid JSON", http.StatusBadRequest)
+		http.Error(w, "Invalid JSON", http.StatusBadRequest)
 		return
 	}
 
@@ -150,7 +147,7 @@ func (h *ProfileHandler) HandleAPIUpdateProfile(w http.ResponseWriter, r *http.R
 	cmd.UpdatedBy = getCurrentUserID(r)
 
 	if err := h.processUpdateProfile(&cmd); err != nil {
-		web.WriteJSONError(w, err.Error(), http.StatusBadRequest)
+		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
@@ -159,7 +156,8 @@ func (h *ProfileHandler) HandleAPIUpdateProfile(w http.ResponseWriter, r *http.R
 		"message": "Profile updated successfully",
 	}
 
-	web.WriteJSON(w, response, http.StatusOK)
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(response)
 }
 
 // HandleAPISuspendUser handles user suspension (admin only)
@@ -169,7 +167,7 @@ func (h *ProfileHandler) HandleAPISuspendUser(w http.ResponseWriter, r *http.Req
 
 	var cmd users.SuspendUserCommand
 	if err := json.NewDecoder(r.Body).Decode(&cmd); err != nil {
-		web.WriteJSONError(w, "Invalid JSON", http.StatusBadRequest)
+		http.Error(w, "Invalid JSON", http.StatusBadRequest)
 		return
 	}
 
@@ -177,7 +175,7 @@ func (h *ProfileHandler) HandleAPISuspendUser(w http.ResponseWriter, r *http.Req
 	cmd.SuspendedBy = getCurrentUserID(r)
 
 	if err := h.processSuspendUser(&cmd); err != nil {
-		web.WriteJSONError(w, err.Error(), http.StatusBadRequest)
+		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
@@ -186,7 +184,8 @@ func (h *ProfileHandler) HandleAPISuspendUser(w http.ResponseWriter, r *http.Req
 		"message": "User suspended successfully",
 	}
 
-	web.WriteJSON(w, response, http.StatusOK)
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(response)
 }
 
 // HandleAPIReinstateUser handles user reinstatement (admin only)
@@ -196,7 +195,7 @@ func (h *ProfileHandler) HandleAPIReinstateUser(w http.ResponseWriter, r *http.R
 
 	var cmd users.ReinstateUserCommand
 	if err := json.NewDecoder(r.Body).Decode(&cmd); err != nil {
-		web.WriteJSONError(w, "Invalid JSON", http.StatusBadRequest)
+		http.Error(w, "Invalid JSON", http.StatusBadRequest)
 		return
 	}
 
@@ -204,7 +203,7 @@ func (h *ProfileHandler) HandleAPIReinstateUser(w http.ResponseWriter, r *http.R
 	cmd.ReinstatedBy = getCurrentUserID(r)
 
 	if err := h.processReinstateUser(&cmd); err != nil {
-		web.WriteJSONError(w, err.Error(), http.StatusBadRequest)
+		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
@@ -213,91 +212,23 @@ func (h *ProfileHandler) HandleAPIReinstateUser(w http.ResponseWriter, r *http.R
 		"message": "User reinstated successfully",
 	}
 
-	web.WriteJSON(w, response, http.StatusOK)
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(response)
 }
 
 // processUpdateProfile handles the core profile update logic
 func (h *ProfileHandler) processUpdateProfile(cmd *users.UpdateUserProfileCommand) error {
-	if err := cmd.Validate(); err != nil {
-		return err
-	}
-
-	user, err := h.userService.GetByID(cmd.UserID)
-	if err != nil {
-		return err
-	}
-
-	if err := user.UpdateProfile(cmd.UpdatedFields, cmd.UpdatedBy); err != nil {
-		return err
-	}
-
-	if err := h.userService.Save(user); err != nil {
-		return err
-	}
-
-	// Publish events
-	for _, event := range user.GetUncommittedEvents() {
-		h.eventBus.Publish(event)
-	}
-
-	user.MarkEventsAsCommitted()
-	return nil
+	return h.userService.UpdateUserProfile(cmd)
 }
 
 // processSuspendUser handles the core user suspension logic
 func (h *ProfileHandler) processSuspendUser(cmd *users.SuspendUserCommand) error {
-	if err := cmd.Validate(); err != nil {
-		return err
-	}
-
-	user, err := h.userService.GetByID(cmd.UserID)
-	if err != nil {
-		return err
-	}
-
-	if err := user.Suspend(cmd.Reason, cmd.SuspendedBy, cmd.Duration); err != nil {
-		return err
-	}
-
-	if err := h.userService.Save(user); err != nil {
-		return err
-	}
-
-	// Publish events
-	for _, event := range user.GetUncommittedEvents() {
-		h.eventBus.Publish(event)
-	}
-
-	user.MarkEventsAsCommitted()
-	return nil
+	return h.userService.SuspendUser(cmd)
 }
 
 // processReinstateUser handles the core user reinstatement logic
 func (h *ProfileHandler) processReinstateUser(cmd *users.ReinstateUserCommand) error {
-	if err := cmd.Validate(); err != nil {
-		return err
-	}
-
-	user, err := h.userService.GetByID(cmd.UserID)
-	if err != nil {
-		return err
-	}
-
-	if err := user.Reinstate(cmd.ReinstatedBy, cmd.Reason); err != nil {
-		return err
-	}
-
-	if err := h.userService.Save(user); err != nil {
-		return err
-	}
-
-	// Publish events
-	for _, event := range user.GetUncommittedEvents() {
-		h.eventBus.Publish(event)
-	}
-
-	user.MarkEventsAsCommitted()
-	return nil
+	return h.userService.ReinstateUser(cmd)
 }
 
 // getCurrentUserID extracts the current user ID from the request context

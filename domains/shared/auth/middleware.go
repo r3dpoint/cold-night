@@ -42,6 +42,7 @@ type SessionStore interface {
 	CreateSession(userID string) (*Session, error)
 	DeleteSession(sessionID string) error
 	IsSessionValid(sessionID string) bool
+	UpdateSessionActivity(sessionID, ipAddress, userAgent string) error
 }
 
 // Session represents a user session

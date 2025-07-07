@@ -6,8 +6,6 @@ import (
 	"time"
 
 	"securities-marketplace/domains/shared/events"
-	"securities-marketplace/domains/trading/bidding"
-	"securities-marketplace/domains/trading/listing"
 )
 
 // MatchingAlgorithm represents different matching algorithms

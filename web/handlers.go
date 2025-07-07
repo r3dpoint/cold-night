@@ -532,7 +532,7 @@ func (s *Server) handleAPIMarketData(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *Server) handleAPIPortfolioSummary(w http.ResponseWriter, r *http.Request) {
-	user, _ := s.getCurrentUser(r)
+	_, _ = s.getCurrentUser(r)
 	
 	// Get portfolio summary for the user
 	summary := &PortfolioSummary{

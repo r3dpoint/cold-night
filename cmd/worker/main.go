@@ -62,17 +62,17 @@ func main() {
 	log.Println("Worker exited")
 }
 
-func startProjectionWorkers(ctx context.Context, eventStore *events.EventStore, eventBus *events.EventBus) {
+func startProjectionWorkers(ctx context.Context, eventStore events.EventStore, eventBus events.EventBus) {
 	log.Println("Starting projection workers...")
 	// TODO: Implement projection workers
 }
 
-func startSettlementWorker(ctx context.Context, eventStore *events.EventStore, eventBus *events.EventBus) {
+func startSettlementWorker(ctx context.Context, eventStore events.EventStore, eventBus events.EventBus) {
 	log.Println("Starting settlement worker...")
 	// TODO: Implement settlement worker
 }
 
-func startComplianceWorker(ctx context.Context, eventStore *events.EventStore, eventBus *events.EventBus) {
+func startComplianceWorker(ctx context.Context, eventStore events.EventStore, eventBus events.EventBus) {
 	log.Println("Starting compliance worker...")
 	// TODO: Implement compliance worker
 }

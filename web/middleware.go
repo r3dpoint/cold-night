@@ -4,6 +4,8 @@ import (
 	"log"
 	"net/http"
 	"time"
+
+	"github.com/gorilla/sessions"
 )
 
 // loggingMiddleware logs HTTP requests

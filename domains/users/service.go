@@ -6,7 +6,6 @@ import (
 	"encoding/base64"
 	"fmt"
 	"strings"
-	"time"
 
 	"golang.org/x/crypto/argon2"
 	"github.com/google/uuid"
@@ -229,7 +228,7 @@ func (s *UserService) AuthenticateUser(cmd *AuthenticateUserCommand) (*UserAggre
 	}
 
 	// Check if user can authenticate
-	if user.Status == UserSuspended {
+	if user.Status == UserStatusSuspended {
 		return nil, fmt.Errorf("user account is suspended")
 	}
 
